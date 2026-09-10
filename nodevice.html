@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("field-lab-theme");
+          var dark = t === "dark";
+          document.documentElement.dataset.theme = dark ? "dark" : "light";
+          document.documentElement.style.colorScheme = dark ? "dark" : "light";
+        } catch (e) {}
+      })();
+    </script>
+    <title>无设备对照 · Field Lab</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="wordmark" href="./index.html">
+        <span class="wordmark-en">Field Lab</span>
+        <span class="wordmark-zh">训练测算</span>
+      </a>
+      <nav class="site-nav">
+        <a href="./hr.html">心率与分区</a>
+        <a href="./threshold.html">阈值与配速</a>
+        <a href="./vo2.html">VO₂max 与 VDOT</a>
+        <a href="./nodevice.html" aria-current="page">无设备对照</a>
+      </nav>
+    </header>
+    <main>
+      <p class="kicker">No device</p>
+      <h1>无设备对照</h1>
+      <p class="lead">
+        没有手表时，用主观方法校准强度。谈话测试是首选；鼻吸测试帮你守 LT1（lactate threshold 1，第一乳酸阈）；RPE（rating of perceived exertion，自觉劳累）作交叉验证。本页没有输入框——对照着跑即可。
+      </p>
+
+      <div class="stack">
+        <section class="block">
+          <h2>谈话测试 Talk Test</h2>
+          <p class="protocol">ACE（American Council on Exercise，美国运动委员会）2025 年综述确认：与 VT1 / VT2（ventilatory threshold，通气阈）的对应关系在不同训练水平人群中均成立，是无设备时的首选。跑、骑、游、爬坡都可以用；跨模式时它比从跑步抄来的心率区更稳。</p>
+          <ol class="steps">
+            <li>跑、骑或爬坡时，试着说一句完整的话（大约 10–15 个字）。游泳不便说话时改用鼻吸或 RPE。</li>
+            <li>对照下表：还能唱歌就太轻松；只能蹦单词就已经过阈。</li>
+          </ol>
+          <table class="ref-table">
+            <thead>
+              <tr>
+                <th>状态</th>
+                <th>对应</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>能完整说长句子，甚至唱歌</td>
+                <td>&lt; LT1（Z1–Z2）</td>
+              </tr>
+              <tr>
+                <td>能说完整句子，但不想多说</td>
+                <td>≈ LT1</td>
+              </tr>
+              <tr>
+                <td>只能说 3–5 个词的短句</td>
+                <td>≈ LT2</td>
+              </tr>
+              <tr>
+                <td>只能蹦单个词，喘气为主</td>
+                <td>&gt; LT2</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="block">
+          <h2>鼻吸测试</h2>
+          <ol class="steps">
+            <li>用鼻子吸、鼻子呼，全程不张嘴。能维持就还在 LT1 以下。</li>
+            <li>一必须张嘴，强度就已经过了 LT1。</li>
+          </ol>
+          <table class="ref-table">
+            <thead>
+              <tr>
+                <th>状态</th>
+                <th>对应</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>能用鼻子全程吸气呼气（不张嘴）</td>
+                <td>&lt; LT1</td>
+              </tr>
+              <tr>
+                <td>必须张嘴呼吸</td>
+                <td>&gt; LT1</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="block">
+          <h2>RPE 自觉劳累（10 分制）</h2>
+          <ol class="steps">
+            <li>问自己：这强度有多费？10 分是力竭，4 分是还能轻松说话。</li>
+            <li>新手容易判断不准，请同时用谈话测试对照，不要只凭「感觉还能再快」。</li>
+          </ol>
+          <table class="ref-table">
+            <thead>
+              <tr>
+                <th>RPE</th>
+                <th>状态</th>
+                <th>分区</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1–2</td>
+                <td>躺着 / 散步</td>
+                <td>Z1</td>
+              </tr>
+              <tr>
+                <td>3–4</td>
+                <td>轻松，能说话</td>
+                <td>Z2</td>
+              </tr>
+              <tr>
+                <td>5–6</td>
+                <td>有点喘，短句</td>
+                <td>Z3</td>
+              </tr>
+              <tr>
+                <td>7–8</td>
+                <td>喘得明显，只能蹦词</td>
+                <td>Z4（LT2 附近）</td>
+              </tr>
+              <tr>
+                <td>9–10</td>
+                <td>极限</td>
+                <td>Z5</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+
+      <section class="notes">
+        <h2>注意事项</h2>
+        <ol>
+          <li>
+            <span class="note-label">新手</span>
+            RPE 判断偏差较大，容易低估或高估。请同时用谈话测试交叉验证，不要只凭「感觉还能再快」。
+          </li>
+          <li>
+            <span class="note-label">训练者</span>
+            对 RPE 的感知更准，训练中可以心率为主、RPE 为辅。无表日仍以谈话测试守 Z2。心率区不要跨跑步、骑行、游泳互抄。
+          </li>
+          <li>
+            <span class="note-label">不要用 SpO₂</span>
+            健康人在 LT1/LT2 时血氧通常仍在 96–98%，看不出拐点；接近 VO₂max 才可能轻度低氧。消费级手表运动中血氧（SpO₂，peripheral oxygen saturation）一致性差（CCC，concordance correlation coefficient &lt; 0.7），不能作为阈值依据。血氧的实用场景是高原：&lt;90% 需要警惕。
+          </li>
+          <li>
+            <span class="note-label">手表算法</span>
+            手表自带的「有氧阈值 / 训练效果」多半基于心率变异性与配速，不是血氧。可以参考，但现场仍以谈话测试或实测 LTHR（lactate threshold heart rate，乳酸阈心率）为准。
+          </li>
+        </ol>
+      </section>
+    </main>
+    <footer class="site-footer">训练测算 · 非实验室诊断 · ACE Talk Test 2025</footer>
+    <script type="module" src="/src/pages/nodevice.ts"></script>
+  </body>
+</html>

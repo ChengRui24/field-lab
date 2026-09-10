@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("field-lab-theme");
+          var dark = t === "dark";
+          document.documentElement.dataset.theme = dark ? "dark" : "light";
+          document.documentElement.style.colorScheme = dark ? "dark" : "light";
+        } catch (e) {}
+      })();
+    </script>
+    <title>临界功率与临界速度 · Field Lab</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="wordmark" href="./index.html">
+        <span class="wordmark-en">Field Lab</span>
+        <span class="wordmark-zh">训练测算</span>
+      </a>
+      <nav class="site-nav"></nav>
+    </header>
+    <main>
+      <p class="kicker">Critical power / speed</p>
+      <h1>临界功率与临界速度</h1>
+      <p class="lead">
+        骑行用功率，跑步用速度，游泳用临界游速。三者不能互换。FTP（functional threshold power，功能阈值功率）只作常用近似，不是临界功率。
+      </p>
+      <table class="method-table">
+        <thead>
+          <tr>
+            <th>方法</th>
+            <th>做法</th>
+            <th>得到</th>
+            <th>注意</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="recommend">临界功率 CP（critical power）</td>
+            <td>2–3 次 2–15 分钟全力，线性拟合：P = CP + W′ / t</td>
+            <td>重度 / 严重强度域边界；W′（W prime）为可动用功</td>
+            <td>Jones / Vanhatalo。骑行功率不能套到跑步</td>
+          </tr>
+          <tr>
+            <td>FTP</td>
+            <td>20 分钟全力平均功率 × 0.95</td>
+            <td>约 1 小时可持续功率的常用近似</td>
+            <td>Allen / Coggan 操作定义，不是 CP</td>
+          </tr>
+          <tr>
+            <td>临界速度 CS（critical speed）</td>
+            <td>两次不同距离全力，v = CS + D′ / t</td>
+            <td>跑步速度域边界；D′（D prime）为可动用距离</td>
+            <td>与 CP 同构，但用速度。不要和骑行瓦数互换</td>
+          </tr>
+          <tr>
+            <td>临界游速 CSS（critical swim speed）</td>
+            <td>Wakayoshi：200 m 与 400 m 全力，CSS = 200 / (T400 − T200)</td>
+            <td>米/秒，可换算成 /100 m</td>
+            <td>场地测试，与跑步配速分开</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="workbench">
+        <form class="panel stack" id="cp-form" autocomplete="off">
+          <div class="block">
+            <h2>骑行 CP</h2>
+            <p class="protocol">临界功率来自 2–3 次不同时长的全力计时。每次都要真正骑尽，两次之间充分恢复（最好隔天）。</p>
+            <ol class="steps">
+              <li>选约 2–15 分钟的计时段，例如 3 分钟和 12 分钟。可再加一次。</li>
+              <li>每次热身后全力骑完全程，记下该次平均功率（W）和用时。</li>
+              <li>至少填两次。页面按 P = CP + W′ / t 拟合。</li>
+            </ol>
+            <div class="field">
+              <label for="cp-t1">测试 1 时间</label>
+              <input id="cp-t1" type="text" data-time="duration" placeholder="3:00 或 300" />
+            </div>
+            <div class="field">
+              <label for="cp-p1">测试 1 平均功率（W）</label>
+              <input id="cp-p1" type="number" min="50" max="2000" step="1" />
+            </div>
+            <div class="field">
+              <label for="cp-t2">测试 2 时间</label>
+              <input id="cp-t2" type="text" data-time="duration" placeholder="12:00 或 1200" />
+            </div>
+            <div class="field">
+              <label for="cp-p2">测试 2 平均功率（W）</label>
+              <input id="cp-p2" type="number" min="50" max="2000" step="1" />
+            </div>
+            <div class="field">
+              <label for="cp-t3">测试 3 时间（可选）</label>
+              <input id="cp-t3" type="text" data-time="duration" placeholder="留空则用两次拟合" />
+            </div>
+            <div class="field">
+              <label for="cp-p3">测试 3 平均功率（W，可选）</label>
+              <input id="cp-p3" type="number" min="50" max="2000" step="1" />
+            </div>
+          </div>
+          <div class="block">
+            <h2>FTP</h2>
+            <p class="protocol">这是训练常用近似，不是实验室 CP。</p>
+            <ol class="steps">
+              <li>充分热身后，全力骑 20 分钟，记下平均功率。</li>
+              <li>页面 × 0.95 得到 FTP。</li>
+            </ol>
+            <div class="field">
+              <label for="ftp-20">20 分钟平均功率（W）</label>
+              <input id="ftp-20" type="number" min="50" max="2000" step="1" />
+            </div>
+          </div>
+          <div class="block">
+            <h2>跑步 CS</h2>
+            <p class="protocol">两次不同距离的全力跑，与骑行瓦数不能互换。</p>
+            <ol class="steps">
+              <li>例如 1200 m 和 3000 m，或 1 km 和 3 km。两次之间充分恢复。</li>
+              <li>每次都全力跑完，记下距离（米）和成绩。</li>
+            </ol>
+            <div class="field">
+              <label for="cs-d1">距离 1（m）</label>
+              <input id="cs-d1" type="number" min="400" max="10000" step="1" placeholder="1200" />
+            </div>
+            <div class="field">
+              <label for="cs-t1">成绩 1</label>
+              <input id="cs-t1" type="text" data-time="duration" placeholder="3:40 或 340" />
+            </div>
+            <div class="field">
+              <label for="cs-d2">距离 2（m）</label>
+              <input id="cs-d2" type="number" min="400" max="21097" step="1" placeholder="3000" />
+            </div>
+            <div class="field">
+              <label for="cs-t2">成绩 2</label>
+              <input id="cs-t2" type="text" data-time="duration" placeholder="10:30 或 1030" />
+            </div>
+          </div>
+          <div class="block">
+            <h2>游泳 CSS</h2>
+            <p class="protocol">场地测 200 m 和 400 m 全力游。</p>
+            <ol class="steps">
+              <li>先全力游 200 m，充分休息后再全力游 400 m（或反过来，但两次都要全力）。</li>
+              <li>记下成绩。CSS = 200 / (T400 − T200)，可换成 /100 m。</li>
+            </ol>
+            <div class="field">
+              <label for="css-200">200 m 成绩</label>
+              <input id="css-200" type="text" data-time="duration" placeholder="2:20 或 220" />
+            </div>
+            <div class="field">
+              <label for="css-400">400 m 成绩</label>
+              <input id="css-400" type="text" data-time="duration" placeholder="5:00 或 500" />
+            </div>
+          </div>
+        </form>
+        <div class="panel results" id="cp-results">
+          <h2>结果</h2>
+          <p class="result-empty" id="cp-empty">在左侧完成任一组测试。</p>
+          <div id="cp-output" hidden></div>
+        </div>
+      </div>
+      <section class="notes">
+        <h2>注意事项</h2>
+        <ol>
+          <li>
+            <span class="note-label">生理含义</span>
+            CP / CS 是重度与严重强度域的上界：低于它可稳态，高于它则 VO₂ 持续漂向最大值、W′ 被耗尽（Jones、Vanhatalo、Burnley）。
+          </li>
+          <li>
+            <span class="note-label">FTP</span>
+            20 分钟 × 0.95 是训练常用近似，便于分区，但不是实验室 CP。不要把 FTP 和 CP 当成同一个数。
+          </li>
+          <li>
+            <span class="note-label">骑跑不能互换</span>
+            2023 年比较研究显示骑行 CP 与跑步功率/临界值差异大，不能用骑车瓦数去定跑步强度。
+          </li>
+          <li>
+            <span class="note-label">测试质量</span>
+            各次测试应充分恢复、真正全力。时间最好落在约 2–15 分钟。两次间隔太近或都未全力，拟合会偏。
+          </li>
+        </ol>
+      </section>
+    </main>
+    <footer class="site-footer">训练测算 · 非实验室诊断 · Jones / Vanhatalo CP · Wakayoshi CSS</footer>
+    <script type="module" src="/src/pages/critical.ts"></script>
+  </body>
+</html>

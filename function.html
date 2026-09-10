@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("field-lab-theme");
+          var dark = t === "dark";
+          document.documentElement.dataset.theme = dark ? "dark" : "light";
+          document.documentElement.style.colorScheme = dark ? "dark" : "light";
+        } catch (e) {}
+      })();
+    </script>
+    <title>功能评估 · Field Lab</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="wordmark" href="./index.html">
+        <span class="wordmark-en">Field Lab</span>
+        <span class="wordmark-zh">训练测算</span>
+      </a>
+      <nav class="site-nav"></nav>
+    </header>
+    <main>
+      <p class="kicker">Physical function</p>
+      <h1>步行与基础功能</h1>
+      <p class="lead">
+        给老年人、低体能或临床功能评估用的现场测试。看的是步行、起坐、平衡转换和握力，不是 VO₂max，也不是训练分区。切点来自 AWGS 2019（Asian Working Group for Sarcopenia）、EWGSOP2（European Working Group on Sarcopenia in Older People 2）和 CDC STEADI（Stopping Elderly Accidents, Deaths & Injuries），只作筛查对照，不能替代医学诊断。
+      </p>
+      <table class="method-table">
+        <thead>
+          <tr>
+            <th>测试</th>
+            <th>看什么</th>
+            <th>常用切点</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>6 分钟步行</td>
+            <td>步行耐力 / 功能距离</td>
+            <td>与 Enright 1998 预测距离比较。不是最大摄氧量</td>
+          </tr>
+          <tr>
+            <td>常速步行</td>
+            <td>日常步速</td>
+            <td>AWGS 2019：6 m 常速 &lt;1.0 m/s；EWGSOP2：≤0.8 m/s</td>
+          </tr>
+          <tr>
+            <td>5 次起坐</td>
+            <td>下肢力量与功率</td>
+            <td>AWGS 2019：≥12 秒；EWGSOP2：&gt;15 秒</td>
+          </tr>
+          <tr>
+            <td>起立–行走 TUG（Timed Up and Go）</td>
+            <td>起立、转向、再坐下</td>
+            <td>CDC STEADI：社区老年人 ≥12 秒作跌倒筛查注意</td>
+          </tr>
+          <tr>
+            <td>握力</td>
+            <td>上肢肌力</td>
+            <td>AWGS 2019：男 &lt;28 kg、女 &lt;18 kg。确诊肌少症还需要肌量</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="workbench">
+        <form class="panel stack" id="fn-form" autocomplete="off">
+          <div class="block">
+            <h2>6 分钟步行</h2>
+            <p class="protocol">ATS（American Thoracic Society）常用的步行功能测试。尽量走远，允许放慢或站住，但不能跑。</p>
+            <ol class="steps">
+              <li>在平坦走廊来回走，两端做标记（常用 30 m）。穿平时的鞋。</li>
+              <li>计时 6 分钟，鼓励继续走，但不要催成跑步。记下总距离。</li>
+              <li>填身高、体重、年龄、性别，用来和 Enright 预测距离比较。</li>
+            </ol>
+            <div class="field">
+              <label for="mwt-m">6 分钟距离（米）</label>
+              <input id="mwt-m" type="number" min="50" max="1000" step="1" placeholder="例如 500" />
+            </div>
+            <div class="field">
+              <label for="mwt-age">年龄</label>
+              <input id="mwt-age" type="number" min="40" max="95" step="1" />
+            </div>
+            <div class="field">
+              <label for="mwt-cm">身高（cm）</label>
+              <input id="mwt-cm" type="number" min="120" max="220" step="0.1" />
+            </div>
+            <div class="field">
+              <label for="mwt-kg">体重（kg）</label>
+              <input id="mwt-kg" type="number" min="30" max="200" step="0.1" />
+            </div>
+            <div class="field">
+              <label>性别</label>
+              <div class="radios">
+                <label><input type="radio" name="mwt-sex" value="male" /> 男</label>
+                <label><input type="radio" name="mwt-sex" value="female" /> 女</label>
+              </div>
+            </div>
+          </div>
+          <div class="block">
+            <h2>常速步行</h2>
+            <p class="protocol">用平时走路的速度，不要比赛。AWGS 用 6 m；4 m 也可以，关键是距离和时间都量准。</p>
+            <ol class="steps">
+              <li>标出 4 m 或 6 m 的平路。两端再留加速/减速区更好，只计中间这段。</li>
+              <li>以「去买菜」那样的平常速度走过去，记下秒数。可走两次取较好或平均。</li>
+            </ol>
+            <div class="field">
+              <label for="gait-m">测试距离（米）</label>
+              <input id="gait-m" type="number" min="3" max="20" step="0.1" placeholder="6" />
+            </div>
+            <div class="field">
+              <label for="gait-sec">用时（秒）</label>
+              <input id="gait-sec" type="number" min="1" max="40" step="0.1" placeholder="例如 6.5" />
+            </div>
+          </div>
+          <div class="block">
+            <h2>5 次起坐</h2>
+            <p class="protocol">从椅子上尽快站起再坐下，共 5 次。看下肢力量，不是有氧。</p>
+            <ol class="steps">
+              <li>椅子约 43–46 cm 高，尽量不扶手。手臂交叉抱在胸前。</li>
+              <li>背部先靠实，计时开始后尽快做 5 次：每次要站直、坐实。</li>
+              <li>第 5 次屁股触椅即停表。</li>
+            </ol>
+            <div class="field">
+              <label for="sts-sec">5 次用时（秒）</label>
+              <input id="sts-sec" type="number" min="4" max="60" step="0.1" placeholder="例如 11.0" />
+            </div>
+          </div>
+          <div class="block">
+            <h2>起立–行走 TUG</h2>
+            <p class="protocol">从椅子站起，走到 3 m 处转身回来再坐下。测的是转移和转向，不是跑步能力。</p>
+            <ol class="steps">
+              <li>椅子靠墙更稳。前方 3 m 做标记。</li>
+              <li>听到开始后站起、走到标记、转身、走回、坐下。可用日常助行器，但要注明。</li>
+              <li>记下从起身到坐稳的秒数。</li>
+            </ol>
+            <div class="field">
+              <label for="tug-sec">完成时间（秒）</label>
+              <input id="tug-sec" type="number" min="4" max="60" step="0.1" placeholder="例如 9.5" />
+            </div>
+          </div>
+          <div class="block">
+            <h2>握力</h2>
+            <p class="protocol">用手持握力计测最大抓握。亚洲筛查优先看 AWGS 2019。</p>
+            <ol class="steps">
+              <li>坐或站均可，肘约 90°，用力握两次，取较好值（公斤）。</li>
+              <li>选对性别。低于切点只说明肌力偏低，不能单凭这项诊断肌少症。</li>
+            </ol>
+            <div class="field">
+              <label>性别</label>
+              <div class="radios">
+                <label><input type="radio" name="grip-sex" value="male" /> 男</label>
+                <label><input type="radio" name="grip-sex" value="female" /> 女</label>
+              </div>
+            </div>
+            <div class="field">
+              <label for="grip-kg">握力（kg）</label>
+              <input id="grip-kg" type="number" min="5" max="80" step="0.1" placeholder="例如 26" />
+            </div>
+          </div>
+        </form>
+        <div class="panel results" id="fn-results">
+          <h2>结果</h2>
+          <p class="result-empty" id="fn-empty">在左侧完成任一项测试。结果是功能筛查，不是实验室诊断。</p>
+          <div id="fn-output" hidden></div>
+        </div>
+      </div>
+      <section class="notes">
+        <h2>注意事项</h2>
+        <ol>
+          <li>
+            <span class="note-label">不是 VO₂max</span>
+            6 分钟步行在 ACSM（American College of Sports Medicine）里是功能评估。本页不把它换算成最大摄氧量。要估 VO₂max，请用「VO₂max」页里能完成的跑步、步行或功率车测试。
+          </li>
+          <li>
+            <span class="note-label">切点怎么读</span>
+            亚洲社区筛查优先 AWGS 2019；欧洲文献常用 EWGSOP2。两者不完全相同。超过切点只表示「这一项偏低」，不是疾病名称。
+          </li>
+          <li>
+            <span class="note-label">肌少症</span>
+            AWGS / EWGSOP2 确诊还需要肌量（DXA，dual-energy X-ray absorptiometry；或生物电阻抗）。握力或起坐单独阳性，最多叫「可能肌少症」筛查，需要临床评估。
+          </li>
+          <li>
+            <span class="note-label">安全</span>
+            不稳定、刚跌倒、严重胸痛或气促时不要做这些测试。TUG 和起坐旁边要有人保护。
+          </li>
+        </ol>
+      </section>
+    </main>
+    <footer class="site-footer">训练测算 · 筛查不是诊断 · Enright 1998 · AWGS 2019 · EWGSOP2 · CDC STEADI</footer>
+    <script type="module" src="/src/pages/function.ts"></script>
+  </body>
+</html>

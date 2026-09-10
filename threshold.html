@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("field-lab-theme");
+          var dark = t === "dark";
+          document.documentElement.dataset.theme = dark ? "dark" : "light";
+          document.documentElement.style.colorScheme = dark ? "dark" : "light";
+        } catch (e) {}
+      })();
+    </script>
+    <title>阈值与配速 · Field Lab</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="wordmark" href="./index.html">
+        <span class="wordmark-en">Field Lab</span>
+        <span class="wordmark-zh">训练测算</span>
+      </a>
+      <nav class="site-nav">
+        <a href="./hr.html">心率与分区</a>
+        <a href="./threshold.html" aria-current="page">阈值与配速</a>
+        <a href="./vo2.html">VO₂max 与 VDOT</a>
+        <a href="./nodevice.html">无设备对照</a>
+      </nav>
+    </header>
+    <main>
+      <p class="kicker">Lactate threshold</p>
+      <h1>阈值与配速</h1>
+      <p class="lead">
+        用计时赛或比赛成绩反推阈值配速，并用 VDOT 得到训练配速。VDOT 不是心率，是比赛表现换出来的有效有氧能力。填哪项出哪项，不互相覆盖。心率分区请用「心率与分区」。
+      </p>
+
+      <table class="method-table">
+        <thead>
+          <tr>
+            <th>方法</th>
+            <th>做法</th>
+            <th>得到</th>
+            <th>适用</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="recommend">30 分钟计时赛</td>
+            <td>热身 10 分钟 → 全力匀速 30 分钟；取最后 20 分钟平均心率</td>
+            <td>LT2（lactate threshold 2，第二乳酸阈）心率；全程平均配速 ≈ LT2 配速</td>
+            <td>能匀速把控 30 分钟全力者。最准的现场 LT2</td>
+          </tr>
+          <tr>
+            <td>比赛成绩反推</td>
+            <td>10K / 半马 / 全马的配速与平均心率</td>
+            <td>LT2 配速与心率区间</td>
+            <td>有正式或近乎比赛的记录。半马最接近 LT2</td>
+          </tr>
+          <tr>
+            <td>由 LT2 推 LT1（lactate threshold 1，第一乳酸阈）</td>
+            <td class="formula">LT1 配速 ≈ LT2 配速 × 1.20–1.25</td>
+            <td>LT1 配速（慢 20–25%）</td>
+            <td>已知 LT2 配速即可</td>
+          </tr>
+          <tr>
+            <td>Daniels VDOT</td>
+            <td>用 5 km / 10 km / 半马 / 全马成绩</td>
+            <td>有效有氧能力 + E/M/T/I（Easy / Marathon / Threshold / Interval）配速。不是心率</td>
+            <td>必须是近期全力比赛，不能用普通训练配速</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="workbench">
+        <form class="panel stack" id="th-form" autocomplete="off">
+          <div class="block">
+            <h2>30 分钟计时赛</h2>
+            <p class="protocol">有手表时最准的现场 LT2。目标是匀速全力，不是前快后崩。跑或骑都可以，但测哪个模式，心率和配速就只用于那个模式。</p>
+            <ol class="steps">
+              <li>热身约 10 分钟，到微微出汗。</li>
+              <li>接着尽全力、尽量匀速跑（或骑）30 分钟。配速按「还能再坚持 30 分钟」来定。不要把跑步阈值心率拿去当骑行区。</li>
+              <li>手表取后 20 分钟平均心率（前 10 分钟心率还在爬）。全程平均配速当作 LT2 配速。</li>
+            </ol>
+            <div class="field">
+              <label for="tt-hr">最后 20 分钟平均心率（bpm）</label>
+              <input id="tt-hr" type="number" min="90" max="220" step="1" placeholder="例如 168" />
+            </div>
+            <div class="field">
+              <label for="tt-pace">全程平均配速（min/km）</label>
+              <input id="tt-pace" type="text" data-time="pace" placeholder="5:00 或 500" />
+              <span class="hint">可写 5:00 或 5。</span>
+            </div>
+          </div>
+          <div class="block">
+            <h2>比赛成绩反推</h2>
+            <p class="protocol">用近期正式或接近比赛的全力成绩。半马最接近 LT2。</p>
+            <ol class="steps">
+              <li>选 10 km、半马或全马中你有可靠记录的一项。</li>
+              <li>填完赛成绩。若手表有全程平均心率，一并填上。</li>
+            </ol>
+            <div class="field">
+              <label for="race-distance">距离</label>
+              <select id="race-distance">
+                <option value="10k">10 km</option>
+                <option value="half" selected>半马</option>
+                <option value="full">全马</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="race-time">完赛成绩</label>
+              <input id="race-time" type="text" data-time="duration" placeholder="1:36:00、45:00 或 4500" />
+            </div>
+            <div class="field">
+              <label for="race-hr">比赛平均心率（bpm，可选）</label>
+              <input id="race-hr" type="number" min="90" max="220" step="1" />
+            </div>
+          </div>
+          <div class="block">
+            <h2>已知 LT2 配速</h2>
+            <p class="protocol">已经从计时赛或比赛得到 LT2 配速时，用来推 LT1。</p>
+            <ol class="steps">
+              <li>LT1 大约再慢 20–25%。例如 LT2 为 5:00/km 时，LT1 约 6:00–6:15/km。</li>
+            </ol>
+            <div class="field">
+              <label for="known-lt2">LT2 配速（min/km）</label>
+              <input id="known-lt2" type="text" data-time="pace" placeholder="5:00 或 500" />
+            </div>
+          </div>
+          <div class="block">
+            <h2>VDOT（比赛 → 训练配速）</h2>
+            <p class="protocol">这不是心率，也不是实验室 VO₂max。用近期全力比赛成绩，得到有效有氧能力和 E / M / T / I 配速。</p>
+            <ol class="steps">
+              <li>选最近一次真正比赛或全力计时赛，不要填普通训练配速。</li>
+              <li>5 km、10 km、半马、全马都可以。有比赛基础的跑者，配速处方通常比实验室 VO₂max 更贴合专项。</li>
+              <li>T 配速接近乳酸阈配速，可和上面的 30 分钟计时赛对照，两者不必相同。</li>
+            </ol>
+            <div class="field">
+              <label for="vdot-distance">距离</label>
+              <select id="vdot-distance">
+                <option value="5000">5 km</option>
+                <option value="10000" selected>10 km</option>
+                <option value="21097.5">半马</option>
+                <option value="42195">全马</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="vdot-time">完赛成绩</label>
+              <input id="vdot-time" type="text" data-time="duration" placeholder="45:00、13600 或 1:36:00" />
+            </div>
+          </div>
+        </form>
+
+        <div class="panel results" id="th-results">
+          <h2>结果</h2>
+          <p class="result-empty" id="th-empty">在左侧填入计时赛、比赛或 VDOT，这里给出阈值配速或训练配速。</p>
+          <div id="th-output" hidden></div>
+        </div>
+      </div>
+
+      <section class="notes">
+        <h2>注意事项</h2>
+        <ol>
+          <li>
+            <span class="note-label">计时赛</span>
+            来源为 Conconi 等人的改良方案，广泛验证。前 10 分钟心率还在上升，所以只取后 20 分钟。这是有手表时最准确的现场 LT2。在跑步上测到的 LTHR 不能当骑行分区；游泳更要单独测。
+          </li>
+          <li>
+            <span class="note-label">新手</span>
+            容易前快后崩，30 分钟数据会失真。建议先有约一个月稳定有氧训练再测。没有比赛基础时，不要用全马反推。
+          </li>
+          <li>
+            <span class="note-label">比赛距离</span>
+            优秀跑者半马约 98–100% LT2 配速，最接近阈值。10K 略高于 LT2；全马略低于 LT2。新手全马后半程掉速严重，全马配速推算会偏低，改用 10K 或半马。
+          </li>
+          <li>
+            <span class="note-label">LT1</span>
+            配速约为 LT2 再慢 20–25%。例：LT2 为 5:00/km 时，LT1 约 6:00–6:15/km。心率侧的 LT1/LT2 见「心率与分区」。
+          </li>
+          <li>
+            <span class="note-label">训练者</span>
+            有比赛成绩或计时赛时，用本页覆盖纯 Karvonen 系数。手表分区改为基于实测 LTHR（lactate threshold heart rate，乳酸阈心率）。注意心率漂移：脱耦联超过约 5% 再考虑降速。
+          </li>
+          <li>
+            <span class="note-label">VDOT</span>
+            Daniels 用比赛时间反推「有效 VO₂max」，名称来自 V̇O₂ 的写法，不是某一串单词的缩写。里面已经包含跑步经济性，所以它预测配速往往比实验室 VO₂max 更准。得到的是配速表，不是心率区。表中 T 与 M 的百分比略有重叠，这是原表如此。
+          </li>
+        </ol>
+      </section>
+    </main>
+    <footer class="site-footer">训练测算 · 非实验室诊断 · Conconi 改良 30 分钟计时赛 · Daniels VDOT</footer>
+    <script type="module" src="/src/pages/threshold.ts"></script>
+  </body>
+</html>

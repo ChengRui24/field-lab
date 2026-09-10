@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("field-lab-theme");
+          var dark = t === "dark";
+          document.documentElement.dataset.theme = dark ? "dark" : "light";
+          document.documentElement.style.colorScheme = dark ? "dark" : "light";
+        } catch (e) {}
+      })();
+    </script>
+    <title>Field Lab · 训练测算</title>
+    <meta
+      name="description"
+      content="训练测算工具。同一页给出结果、公式、精度与适用边界。覆盖有氧、功能评估、力量、临界功率、供能与脱耦联。"
+    />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="wordmark" href="./index.html">
+        <span class="wordmark-en">Field Lab</span>
+        <span class="wordmark-zh">训练测算</span>
+      </a>
+      <nav class="site-nav">
+        <a href="./hr.html">心率与分区</a>
+        <a href="./threshold.html">阈值与配速</a>
+        <a href="./vo2.html">VO₂max 与 VDOT</a>
+        <a href="./nodevice.html">无设备对照</a>
+      </nav>
+    </header>
+    <main>
+      <div class="home-intro">
+        <div>
+          <h1>先选要算什么</h1>
+          <p class="lead">
+            每个工具同一页完成输入、结果和注意事项。公式来自经过验证的现场方法，并写明误差与适用人群。这不是训练计划，也不是实验室诊断。
+          </p>
+        </div>
+        <aside class="home-aside">
+          <p>首页不收集年龄或性别。算到哪一步，再填哪一项。</p>
+          <p>每个结果都标明方法、精度和适用边界。估算供训练参考，不能替代实验室或医学评估。</p>
+          <p>消费级手表运动中血氧不能判断阈值，本站不做血氧计算。</p>
+        </aside>
+      </div>
+      <div class="index-group">
+      <p class="index-label">有氧</p>
+      <section class="tool-index" aria-label="有氧工具">
+        <a class="tool-card" href="./hr.html">
+          <div class="tool-card-num">01</div>
+          <h2>心率与分区</h2>
+          <p>最大心率、储备心率、Karvonen 五区，以及 LT1/LT2 心率区间。</p>
+          <div class="meta-row">
+            <span class="tag">需要：年龄</span>
+            <span class="tag">Tanaka · Karvonen</span>
+          </div>
+        </a>
+        <a class="tool-card" href="./threshold.html">
+          <div class="tool-card-num">02</div>
+          <h2>阈值与配速</h2>
+          <p>30 分钟计时赛或比赛成绩反推 LT2，以及用 VDOT 从比赛得到 E/M/T/I 训练配速。</p>
+          <div class="meta-row">
+            <span class="tag">计时赛 · 比赛</span>
+            <span class="tag">VDOT 不是心率</span>
+          </div>
+        </a>
+        <a class="tool-card" href="./vo2.html">
+          <div class="tool-card-num">03</div>
+          <h2>VO₂max</h2>
+          <p>Cooper、Rockport、台阶、YMCA 功率车、ACSM 代谢式。按你能完成的测试选。</p>
+          <div class="meta-row">
+            <span class="tag">按体能选方法</span>
+          </div>
+        </a>
+        <a class="tool-card" href="./nodevice.html">
+          <div class="tool-card-num">04</div>
+          <h2>无设备对照</h2>
+          <p>谈话测试、鼻吸与 RPE。没有手表时校准强度。</p>
+          <div class="meta-row">
+            <span class="tag">ACE 谈话测试</span>
+          </div>
+        </a>
+        <a class="tool-card" href="./durability.html">
+          <div class="tool-card-num">05</div>
+          <h2>心率脱耦联</h2>
+          <p>前半 vs 后半的心率相对配速或功率，监测有氧耐久性。</p>
+          <div class="meta-row">
+            <span class="tag">Jones 2024</span>
+            <span class="tag">约 5% 作注意线</span>
+          </div>
+        </a>
+      </section>
+      </div>
+      <div class="index-group">
+      <p class="index-label">功能评估</p>
+      <section class="tool-index" aria-label="功能评估工具">
+        <a class="tool-card" href="./function.html">
+          <div class="tool-card-num">06</div>
+          <h2>步行与基础功能</h2>
+          <p>6 分钟步行、常速、5 次起坐、TUG（Timed Up and Go）、握力。给老年人或低体能的现场筛查，不是 VO₂max。</p>
+          <div class="meta-row">
+            <span class="tag">AWGS 2019</span>
+            <span class="tag">筛查不是诊断</span>
+          </div>
+        </a>
+      </section>
+      </div>
+      <div class="index-group">
+      <p class="index-label">力量</p>
+      <section class="tool-index" aria-label="力量工具">
+        <a class="tool-card" href="./strength.html">
+          <div class="tool-card-num">07</div>
+          <h2>1RM 与负荷</h2>
+          <p>Epley / Brzycki 估算 1RM，按 ACSM 2026 给出最大力量、增肌、爆发力区间，并附 RIR 量表。</p>
+          <div class="meta-row">
+            <span class="tag">需要：重量 × 次数</span>
+            <span class="tag">ACSM 2026</span>
+          </div>
+        </a>
+      </section>
+      </div>
+      <div class="index-group">
+      <p class="index-label">其他耐力</p>
+      <section class="tool-index" aria-label="其他耐力工具">
+        <a class="tool-card" href="./critical.html">
+          <div class="tool-card-num">08</div>
+          <h2>临界功率与临界速度</h2>
+          <p>骑行 CP、FTP 近似、跑步 CS、游泳 CSS。骑跑游不能互换。</p>
+          <div class="meta-row">
+            <span class="tag">Jones / Vanhatalo</span>
+            <span class="tag">Wakayoshi CSS</span>
+          </div>
+        </a>
+      </section>
+      </div>
+      <div class="index-group">
+      <p class="index-label">供能</p>
+      <section class="tool-index" aria-label="供能工具">
+        <a class="tool-card" href="./fuel.html">
+          <div class="tool-card-num">09</div>
+          <h2>供能、补剂与出汗率</h2>
+          <p>咖啡因、蛋白、肌酸、碳水区间，以及体重差法出汗率。</p>
+          <div class="meta-row">
+            <span class="tag">ISSN</span>
+            <span class="tag">需要：体重</span>
+          </div>
+        </a>
+      </section>
+      </div>
+    </main>
+    <footer class="site-footer">训练测算 · 非实验室诊断 · 公式均注明出处与适用边界</footer>
+    <script type="module" src="/src/pages/home.ts"></script>
+  </body>
+</html>

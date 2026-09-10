@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("field-lab-theme");
+          var dark = t === "dark";
+          document.documentElement.dataset.theme = dark ? "dark" : "light";
+          document.documentElement.style.colorScheme = dark ? "dark" : "light";
+        } catch (e) {}
+      })();
+    </script>
+    <title>心率与分区 · Field Lab</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="wordmark" href="./index.html">
+        <span class="wordmark-en">Field Lab</span>
+        <span class="wordmark-zh">训练测算</span>
+      </a>
+      <nav class="site-nav">
+        <a href="./hr.html" aria-current="page">心率与分区</a>
+        <a href="./threshold.html">阈值与配速</a>
+        <a href="./vo2.html">VO₂max 与 VDOT</a>
+        <a href="./nodevice.html">无设备对照</a>
+      </nav>
+    </header>
+    <main>
+      <p class="kicker">Heart rate</p>
+      <h1>心率与分区</h1>
+      <p class="lead">
+        同一页完成最大心率 HRmax（maximum heart rate）、储备心率 HRR（heart rate reserve）、五区，以及 LT1 / LT2（lactate threshold，第一 / 第二乳酸阈）心率。先填年龄就会出公式对照；补上静息心率后改用 Karvonen（有运动习惯者应当如此）。
+      </p>
+
+      <table class="method-table">
+        <thead>
+          <tr>
+            <th>方法</th>
+            <th>公式</th>
+            <th>精度</th>
+            <th>适用</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="recommend">Tanaka（推荐）</td>
+            <td class="formula">HRmax = 208 - 0.7 × 年龄</td>
+            <td>RMSE（root mean square error）±7 bpm，18,712 人荟萃分析</td>
+            <td>普通人群，男女均适用</td>
+          </tr>
+          <tr>
+            <td>Gulati</td>
+            <td class="formula">HRmax = 206 - 0.88 × 年龄</td>
+            <td>对女性通常更准</td>
+            <td>女性；本页选「女」后作为选用值</td>
+          </tr>
+          <tr>
+            <td>Fox（对照）</td>
+            <td class="formula">HRmax = 220 - 年龄</td>
+            <td>标准差 ±10–12 bpm</td>
+            <td>粗略对照，不作为选用值</td>
+          </tr>
+          <tr>
+            <td>现场实测</td>
+            <td>充分热身后，跑道/坡道 3–6 分钟全力，取手表峰值</td>
+            <td>±1–2 bpm</td>
+            <td>能承受高强度者；有则覆盖公式</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="workbench">
+        <form class="panel stack" id="hr-form" autocomplete="off">
+          <div class="block">
+            <h2>输入</h2>
+            <ol class="steps">
+              <li>年龄必填，用来估最大心率。</li>
+              <li>有运动习惯请测晨脉：醒来不起床，静坐约 1 分钟，数 30 秒脉搏 ×2，连测 3 天取平均。</li>
+              <li>能做现场全力冲的人，把手表峰值填进实测 HRmax，会覆盖公式。</li>
+            </ol>
+            <div class="field">
+              <label for="age">年龄</label>
+              <input id="age" name="age" type="number" min="10" max="90" step="1" placeholder="例如 40" />
+            </div>
+            <div class="field">
+              <label>性别</label>
+              <div class="radios">
+                <label><input type="radio" name="sex" value="male" /> 男</label>
+                <label><input type="radio" name="sex" value="female" /> 女</label>
+              </div>
+              <span class="hint">用于在 Tanaka 与 Gulati 之间选用；不填则默认 Tanaka。</span>
+            </div>
+            <div class="field">
+              <label for="rhr">静息心率 RHR（resting heart rate，bpm）</label>
+              <input id="rhr" name="rhr" type="number" min="30" max="120" step="1" placeholder="例如 60" />
+            </div>
+            <div class="field">
+              <label for="measured">实测 HRmax（bpm，可选）</label>
+              <input id="measured" name="measured" type="number" min="100" max="230" step="1" placeholder="有手表峰值再填" />
+            </div>
+          </div>
+        </form>
+
+        <div class="panel results" id="hr-results">
+          <h2>结果</h2>
+          <p class="result-empty" id="hr-empty">填写年龄后，这里给出最大心率与分区。</p>
+          <div id="hr-output" hidden></div>
+        </div>
+      </div>
+      <div class="panel detail-panel" id="hr-detail" hidden></div>
+
+      <section class="notes">
+        <h2>注意事项</h2>
+        <ol>
+          <li>
+            <span class="note-label">训练者</span>
+            公式对所有人的系统误差相近，但训练有素者真实 HRmax 与公式的个体偏差可能更大。长期耐力训练并不降低 HRmax。能承受高强度者，建议用现场全力冲，不要只靠公式。
+          </li>
+          <li>
+            <span class="note-label">新手</span>
+            不敢冲或不适宜高强度者，用 Tanaka 即可。不要为了测最大心率冒险。无运动习惯者的 LT2 来得更早，约 82–85% HRmax（Karvonen 80–83%），不要套训练者的 88%。
+          </li>
+          <li>
+            <span class="note-label">Karvonen</span>
+            目标心率 = RHR + (HRmax − RHR) × 强度%。静息心率越低，与直接用 %HRmax 的偏差越大。训练者 70% HRmax 可能只是散步，有运动习惯必须测晨脉。
+          </li>
+          <li>
+            <span class="note-label">运动模式</span>
+            Tanaka 估的是陆地峰值，跑步和功率车在人群公式里接近。游泳峰值心率常低约 10 bpm（常见 7–15），不要用本页 %HRmax 套进泳池。跑步和骑行的五区、尤其是阈值附近不要互抄：群体平均只差几跳，同一个人误差可以到约 12 bpm。爬楼、爬坡的 HRmax 接近陆地，但同一心率往往更累，不要用平路配速区。
+          </li>
+          <li>
+            <span class="note-label">手表</span>
+            许多手表默认 Z2 = 60–70% HRmax，对训练者偏低。请改成基于 HRR 或 LTHR（lactate threshold heart rate，乳酸阈心率）的自定义分区（Garmin / 高驰均支持）。
+          </li>
+          <li>
+            <span class="note-label">女性</span>
+            Gulati 对女性通常更准。本页在选择「女」且无实测时，以 Gulati 为选用 HRmax，Tanaka 仍列出对照。
+          </li>
+          <li>
+            <span class="note-label">LT 系数</span>
+            无运动习惯：LT1 ≈ 65% HRR，LT2 ≈ 80–83% HRR。有训练习惯：LT2 可到 85–88% HRR（精英甚至 92–94% HRmax）。同一「88% HRmax」对新手可能已经超阈。
+          </li>
+        </ol>
+      </section>
+    </main>
+    <footer class="site-footer">训练测算 · 非实验室诊断 · Tanaka 2001 · Karvonen</footer>
+    <script type="module" src="/src/pages/hr.ts"></script>
+  </body>
+</html>

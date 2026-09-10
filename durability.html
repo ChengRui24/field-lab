@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("field-lab-theme");
+          var dark = t === "dark";
+          document.documentElement.dataset.theme = dark ? "dark" : "light";
+          document.documentElement.style.colorScheme = dark ? "dark" : "light";
+        } catch (e) {}
+      })();
+    </script>
+    <title>脱耦联 · Field Lab</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="wordmark" href="./index.html">
+        <span class="wordmark-en">Field Lab</span>
+        <span class="wordmark-zh">训练测算</span>
+      </a>
+      <nav class="site-nav"></nav>
+    </header>
+    <main>
+      <p class="kicker">Durability</p>
+      <h1>心率脱耦联</h1>
+      <p class="lead">
+        用前半段与后半段的「心率 / 外部做功」比值，估算有氧课的生理漂移。Jones 等将耐久性视为耐力表现的第四维。这是监测，不是实验室耐久性诊断。
+      </p>
+      <table class="method-table">
+        <thead>
+          <tr>
+            <th>指标</th>
+            <th>算法</th>
+            <th>怎么读</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>内部 / 外部比</td>
+            <td>心率 ÷ 速度，或心率 ÷ 功率</td>
+            <td>同一配速心率升高，或同一心率配速下降，比值都会变大</td>
+          </tr>
+          <tr>
+            <td>脱耦联 %</td>
+            <td>(后半比值 / 前半比值 − 1) × 100</td>
+            <td>正值表示后半更费。训练中常把约 5% 当作「值得注意」，不是硬阈值</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="workbench">
+        <form class="panel stack" id="dc-form" autocomplete="off">
+          <div class="block">
+            <h2>怎么比</h2>
+            <p class="protocol">把一次稳定有氧课切成前半、后半，比较「心率相对配速或功率」有没有往上漂。</p>
+            <ol class="steps">
+              <li>选地形、意图都差不多的一段课，例如平路轻松跑的前半 vs 后半。不要拿爬坡去对平路。</li>
+              <li>跑步填两段平均配速和平均心率；骑行改选功率，填两段平均瓦数和心率。</li>
+            </ol>
+            <div class="field">
+              <label>外部做功</label>
+              <div class="radios">
+                <label><input type="radio" name="dc-mode" value="pace" checked /> 配速（跑步）</label>
+                <label><input type="radio" name="dc-mode" value="power" /> 功率（骑行）</label>
+              </div>
+            </div>
+          </div>
+          <div class="block">
+            <h2>前半段</h2>
+            <div class="field" id="dc-early-pace-wrap">
+              <label for="dc-early-pace">平均配速（min/km）</label>
+              <input id="dc-early-pace" type="text" data-time="pace" placeholder="5:20 或 520" />
+            </div>
+            <div class="field" id="dc-early-power-wrap" hidden>
+              <label for="dc-early-power">平均功率（W）</label>
+              <input id="dc-early-power" type="number" min="50" max="2000" step="1" />
+            </div>
+            <div class="field">
+              <label for="dc-early-hr">平均心率（bpm）</label>
+              <input id="dc-early-hr" type="number" min="80" max="220" step="1" />
+            </div>
+          </div>
+          <div class="block">
+            <h2>后半段</h2>
+            <div class="field" id="dc-late-pace-wrap">
+              <label for="dc-late-pace">平均配速（min/km）</label>
+              <input id="dc-late-pace" type="text" data-time="pace" placeholder="5:28 或 528" />
+            </div>
+            <div class="field" id="dc-late-power-wrap" hidden>
+              <label for="dc-late-power">平均功率（W）</label>
+              <input id="dc-late-power" type="number" min="50" max="2000" step="1" />
+            </div>
+            <div class="field">
+              <label for="dc-late-hr">平均心率（bpm）</label>
+              <input id="dc-late-hr" type="number" min="80" max="220" step="1" />
+            </div>
+          </div>
+        </form>
+        <div class="panel results" id="dc-results">
+          <h2>结果</h2>
+          <p class="result-empty" id="dc-empty">填入前半、后半的心率与配速或功率。</p>
+          <div id="dc-output" hidden></div>
+        </div>
+      </div>
+      <section class="notes">
+        <h2>注意事项</h2>
+        <ol>
+          <li>
+            <span class="note-label">第四维</span>
+            Jones 2024（<cite>J Physiol</cite>）把生理韧性 / 耐久性与 VO₂max、效率、阈值并列。Maunder 2021、Smyth 2022（约 8.2 万名全马）用心率相对配速的漂移描述现场表现。
+          </li>
+          <li>
+            <span class="note-label">不是诊断</span>
+            2025 年 <cite>Experimental Physiology</cite> 方法学综述：现场脱耦联不等于实验室测到的阈值衰退。热、脱水、坡度、心率漂移都会抬高这个数。
+          </li>
+          <li>
+            <span class="note-label">约 5%</span>
+            有氧长课里脱耦联超过约 5% 常被当作「今天该降速或缩短」的信号，来自训练实践，不是 ACSM（American College of Sports Medicine）诊断切点。趋势比单次绝对值更有用。
+          </li>
+          <li>
+            <span class="note-label">怎么切段</span>
+            尽量比「同样地形、同样意图」的两段，例如平路长跑的前半与后半，不要拿爬坡后半去对平路前半。
+          </li>
+        </ol>
+      </section>
+    </main>
+    <footer class="site-footer">训练测算 · 监测不是诊断 · Jones 2024 · Maunder 2021</footer>
+    <script type="module" src="/src/pages/durability.ts"></script>
+  </body>
+</html>
