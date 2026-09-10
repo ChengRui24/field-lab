@@ -1,4 +1,5 @@
 import { initTheme } from "./theme";
+import { initSeo } from "./seo";
 
 export type PageId =
   | "home"
@@ -33,4 +34,5 @@ export function initChrome(current: PageId): void {
     }).join("");
   }
   initTheme();
+  initSeo();
 }

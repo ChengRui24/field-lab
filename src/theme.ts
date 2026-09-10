@@ -18,20 +18,20 @@ function labelFor(theme: Theme): string {
 export function initTheme(): void {
   applyTheme(storedTheme());
 
-  const nav = document.querySelector(".site-nav");
-  if (!(nav instanceof HTMLElement)) return;
-  if (nav.querySelector(".theme-toggle")) return;
+  const header = document.querySelector(".site-header");
+  if (!(header instanceof HTMLElement)) return;
+  if (header.querySelector(".theme-toggle")) return;
 
   const button = document.createElement("button");
   button.type = "button";
   button.className = "theme-toggle";
   button.textContent = labelFor(storedTheme());
-  button.setAttribute("aria-label", "切换外观");
+  button.setAttribute("aria-label", "切换浅色或深色外观");
   button.addEventListener("click", () => {
     const next: Theme = storedTheme() === "dark" ? "light" : "dark";
     localStorage.setItem(STORAGE_KEY, next);
     applyTheme(next);
     button.textContent = labelFor(next);
   });
-  nav.appendChild(button);
+  header.appendChild(button);
 }

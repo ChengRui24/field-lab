@@ -69,10 +69,11 @@ select {
 }
 
 .site-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: end;
+  column-gap: 28px;
+  row-gap: 10px;
   max-width: var(--max);
   margin: 0 auto;
   padding: 22px 28px 14px;
@@ -102,22 +103,18 @@ select {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
+  justify-content: flex-end;
   gap: 4px 16px;
   font-size: 13px;
 }
 
-.site-nav a,
-.theme-toggle {
+.site-nav a {
   text-decoration: none;
   color: var(--text-2);
   padding-bottom: 3px;
-  background: none;
-  border: none;
-  cursor: pointer;
 }
 
-.site-nav a:hover,
-.theme-toggle:hover {
+.site-nav a:hover {
   color: var(--text);
 }
 
@@ -127,7 +124,21 @@ select {
 }
 
 .theme-toggle {
-  margin-left: 8px;
+  justify-self: end;
+  align-self: start;
+  margin: 2px 0 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  color: var(--text-2);
 }
 
 main {
@@ -601,6 +612,19 @@ cite {
 }
 
 @media (max-width: 860px) {
+  .site-header {
+    grid-template-columns: 1fr auto;
+  }
+
+  .site-nav {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
+  .theme-toggle {
+    align-self: start;
+    margin-top: 6px;
+  }
   .site-header,
   main,
   .site-footer {
@@ -635,9 +659,5 @@ cite {
 
   .result-value {
     font-size: 36px;
-  }
-
-  .theme-toggle {
-    margin-left: 0;
   }
 }
