@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://chengrui24.github.io/field-lab/sitemap.xml
