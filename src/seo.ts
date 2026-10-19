@@ -1,4 +1,4 @@
-export const SITE_ORIGIN = "https://chengrui24.github.io/field-lab";
+import { SITE_NAME, SITE_ORIGIN, ogImageUrl } from "./site";
 
 function canonicalPath(): string {
   const file = window.location.pathname.split("/").pop() ?? "";
@@ -23,9 +23,9 @@ function upsertMeta(attr: "name" | "property", key: string, content: string): vo
 }
 
 function upsertLink(rel: string, href: string): void {
-  let el = document.head.querySelector(`link[rel="${rel}"]`);
-  if (!(el instanceof HTMLLinkElement)) {
-    el = document.createElement("link");
+  const found = document.head.querySelector(`link[rel="${rel}"]`);
+  const el = found instanceof HTMLLinkElement ? found : document.createElement("link");
+  if (!(found instanceof HTMLLinkElement)) {
     el.rel = rel;
     document.head.appendChild(el);
   }
@@ -37,13 +37,20 @@ export function initSeo(): void {
   const title = document.title;
   const desc =
     document.querySelector('meta[name="description"]')?.getAttribute("content") ?? "";
+  const image = ogImageUrl();
 
   upsertLink("canonical", url);
+  upsertMeta("name", "robots", "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1");
   upsertMeta("property", "og:title", title);
   upsertMeta("property", "og:description", desc);
   upsertMeta("property", "og:url", url);
   upsertMeta("property", "og:type", "website");
   upsertMeta("property", "og:locale", "zh_CN");
-  upsertMeta("property", "og:site_name", "Field Lab · 训练测算");
-  upsertMeta("name", "twitter:card", "summary");
+  upsertMeta("property", "og:site_name", SITE_NAME);
+  upsertMeta("property", "og:image", image);
+  upsertMeta("property", "og:image:alt", SITE_NAME);
+  upsertMeta("name", "twitter:card", "summary_large_image");
+  upsertMeta("name", "twitter:title", title);
+  upsertMeta("name", "twitter:description", desc);
+  upsertMeta("name", "twitter:image", image);
 }
