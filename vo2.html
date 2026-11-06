@@ -14,16 +14,16 @@
         } catch (e) {}
       })();
     </script>
-    <title>VO₂max 现场估算 · Cooper Rockport YMCA · Field Lab</title>
+    <title>VO₂max 现场估算 · Cooper Rockport Yo-Yo 30-15 · Field Lab</title>
     <meta
       name="description"
-      content="Cooper 12 分钟跑、Rockport 步行、台阶和 YMCA 功率车估算最大摄氧量。按体能选测试，写明公式与误差，不是实验室诊断。"
+      content="Cooper 12 分钟跑、Rockport 步行、台阶、YMCA 功率车，以及球类常用的 Yo-Yo、20 m 往返跑和 30-15 间歇测试估算最大摄氧量，30-15 附间歇跑距离。写明公式与误差，不是实验室诊断。"
     />
     <link rel="canonical" href="https://chengrui24.github.io/field-lab/vo2.html" />
-    <meta property="og:title" content="VO₂max 现场估算 · Cooper Rockport YMCA · Field Lab" />
+    <meta property="og:title" content="VO₂max 现场估算 · Cooper Rockport Yo-Yo 30-15 · Field Lab" />
     <meta
       property="og:description"
-      content="Cooper 12 分钟跑、Rockport 步行、台阶和 YMCA 功率车估算最大摄氧量。按体能选测试，写明公式与误差，不是实验室诊断。"
+      content="Cooper 12 分钟跑、Rockport 步行、台阶、YMCA 功率车，以及球类常用的 Yo-Yo、20 m 往返跑和 30-15 间歇测试估算最大摄氧量，30-15 附间歇跑距离。写明公式与误差，不是实验室诊断。"
     />
     <meta property="og:url" content="https://chengrui24.github.io/field-lab/vo2.html" />
     <meta property="og:type" content="website" />
@@ -47,13 +47,14 @@
         <a href="./critical.html">临界</a>
         <a href="./fuel.html">供能</a>
         <a href="./durability.html">脱耦联</a>
+        <a href="./load.html">训练负荷</a>
       </nav>
     </header>
     <main>
       <p class="kicker">Aerobic capacity</p>
       <h1>VO₂max</h1>
       <p class="lead">
-        按你能完成的测试选一项即可，估的是 VO₂max（maximal oxygen uptake，最大摄氧量）。有跑步基础用 Cooper；久坐或体重较大用 Rockport 步行；有功率车用 YMCA。比赛成绩换训练配速请到「阈值与配速」的 VDOT。老年人步行功能请到「功能」。
+        按你能完成的测试选一项即可，估的是 VO₂max（maximal oxygen uptake，最大摄氧量）。有跑步基础用 Cooper；久坐或体重较大用 Rockport 步行；有功率车用 YMCA；球类队伍用 Yo-Yo、20 m 往返跑或 30-15。比赛成绩换训练配速请到「阈值与配速」的 VDOT。老年人步行功能请到「功能」。
       </p>
 
       <table class="method-table">
@@ -95,6 +96,24 @@
             <td>热身后骑两档由轻到重的稳定功率，记下每档心率</td>
             <td>不能跑步、有功率车者</td>
             <td>必须亚极量；两档心率都要在 110–150 bpm，第二档高于第一档。原版 YMCA 外推到 220 − 年龄，本页改用 Tanaka</td>
+          </tr>
+          <tr>
+            <td>Yo-Yo 间歇恢复测试（IR1 / IR2）</td>
+            <td class="formula">IR1：VO₂max = 距离 m × 0.0084 + 36.4；IR2：× 0.0136 + 45.3</td>
+            <td>球类队伍，追踪总距离的变化</td>
+            <td>想精确知道 VO₂max：与实验室值相关仅 r = 0.70（IR1）/ 0.58（IR2）</td>
+          </tr>
+          <tr>
+            <td>20 m 往返跑（Léger 1988，1 分钟一级）</td>
+            <td class="formula">速度 S = 8 + 0.5 × 级数；VO₂max = 31.025 + 3.238S − 3.248A + 0.1536AS（成人 A 取 18，约 −27.4 + 6.0S）</td>
+            <td>学生、球类与有急停急起的项目；可集体测</td>
+            <td>使用其他音频版本（如 Ramsbottom 1988 起速与级数不同）的成绩</td>
+          </tr>
+          <tr>
+            <td>30-15 间歇体能测试（30-15 IFT）</td>
+            <td class="formula">VO₂max = 28.3 − 2.15G − 0.741A − 0.0357W + 0.0586A·V + 1.03V</td>
+            <td>球类队伍；V<sub>IFT</sub> 直接用来定 15 s/15 s 间歇的跑动距离</td>
+            <td>公式只在约 16 岁青少年手球运动员中验证，成人 VO₂max 仅供参考</td>
           </tr>
           <tr>
             <td>ACSM（American College of Sports Medicine）代谢式</td>
@@ -226,6 +245,75 @@
             </div>
           </div>
           <div class="block">
+            <h2>Yo-Yo 间歇恢复测试</h2>
+            <p class="protocol">2 × 20 m 往返，每趟后 10 秒主动恢复，速度随音频递增。成绩是总距离，比换算出的 VO₂max 更适合追踪。</p>
+            <ol class="steps">
+              <li>标出 20 m 跑道，起点线后 5 m 处再标一条恢复线。用官方 IR1 或 IR2 音频。</li>
+              <li>每次信号响起跑 20 m 并返回，然后在 5 m 恢复区慢跑一个来回，等下一声。</li>
+              <li>第二次没能按时回到起点线即结束。记下此时的累计距离（米）。</li>
+            </ol>
+            <div class="field">
+              <label for="yy-level">版本</label>
+              <select id="yy-level">
+                <option value="ir1" selected>IR1（起速 10 km/h，多数球队用）</option>
+                <option value="ir2">IR2（起速 13 km/h，高水平）</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="yy-m">总距离（米）</label>
+              <input id="yy-m" type="number" inputmode="numeric" min="40" max="4000" step="40" placeholder="例如 1800" />
+            </div>
+          </div>
+          <div class="block">
+            <h2>20 m 往返跑（Léger 1988）</h2>
+            <p class="protocol">本页按 Léger 1988 版本计算：第 1 级 8.5 km/h，每分钟一级、每级加 0.5 km/h。其他音频版本级数对应的速度不同，不能直接填。</p>
+            <ol class="steps">
+              <li>在防滑地面上标出相距 20 m 的两条线，播放 Léger 1988 音频。</li>
+              <li>每声信号前跑到对面线并踩线，跟着节奏不断往返；不要提前冲过去等。</li>
+              <li>连续两次没在信号响时到线就停。记下停下时播报到的级数。</li>
+            </ol>
+            <div class="field">
+              <label for="sr-stage">级数（停下时播报的级数）</label>
+              <input id="sr-stage" type="number" inputmode="numeric" min="1" max="21" step="1" placeholder="例如 9" />
+            </div>
+            <div class="field">
+              <label for="sr-age">年龄（岁）</label>
+              <input id="sr-age" type="number" inputmode="numeric" min="6" max="90" step="1" data-persist="age" data-range-note="超出 Léger 公式的验证人群（儿童 8–19 岁，成人 18–50 岁），结果仅供参考" data-valid-min="8" data-valid-max="50" />
+              <p class="field-note range-note" id="sr-age-range-note" hidden></p>
+            </div>
+          </div>
+          <div class="block">
+            <h2>30-15 间歇体能测试</h2>
+            <p class="protocol">跑 30 秒、走 15 秒，40 m 往返。成绩是最后一个完整完成的级的速度 V<sub>IFT</sub>，主要用来定间歇跑距离。</p>
+            <ol class="steps">
+              <li>标出相距 40 m 的两端线和中线，每条线两侧各留 3 m 区域。用官方 30-15 IFT 音频。</li>
+              <li>第 1 级 8 km/h，每级（30 秒跑 + 15 秒走）加 0.5 km/h。15 秒内走到最近的线，从那里开始下一级。</li>
+              <li>连续 3 次没在信号时进入 3 m 区，或主动停下，即结束。最后完整跑完的那级速度就是 V<sub>IFT</sub>。</li>
+            </ol>
+            <div class="field">
+              <label for="ift-v">V<sub>IFT</sub>（km/h）</label>
+              <input id="ift-v" type="number" inputmode="decimal" min="8" max="28" step="0.5" placeholder="例如 19" />
+            </div>
+            <div class="field">
+              <label for="ift-age">年龄（岁）</label>
+              <input id="ift-age" type="number" inputmode="numeric" min="10" max="90" step="1" data-persist="age" data-range-note="30-15 公式只在青少年手球运动员（平均约 16 岁）中验证，VO₂max 仅供参考；间歇距离不受影响" data-valid-min="12" data-valid-max="20" />
+              <p class="field-note range-note" id="ift-age-range-note" hidden></p>
+            </div>
+            <div class="field">
+              <label for="ift-kg">体重（kg）</label>
+              <input id="ift-kg" type="number" inputmode="decimal" data-persist="weight" min="30" max="200" step="0.1" />
+            </div>
+            <div class="field">
+              <fieldset class="radio-group">
+                <legend>性别</legend>
+                <div class="radios">
+                  <label><input type="radio" name="ift-sex" value="male" data-persist="sex" /> 男</label>
+                  <label><input type="radio" name="ift-sex" value="female" data-persist="sex" /> 女</label>
+                </div>
+              </fieldset>
+            </div>
+          </div>
+          <div class="block">
             <h2>ACSM 代谢式（当前强度 VO₂）</h2>
             <p class="protocol">这不是最大摄氧量测试。已知当时的配速或功率，估算那个强度下的摄氧量。</p>
             <ol class="steps">
@@ -296,13 +384,25 @@
             有 5 km 及以上比赛成绩时，用「阈值与配速」里的 VDOT 得到 E/M/T/I 配速。那不是心率，也不是实验室 VO₂max。
           </li>
           <li>
+            <span class="note-label">球类场地测试</span>
+            Yo-Yo、20 m 往返跑和 30-15 换算出的 VO₂max 都是估计值：Yo-Yo IR1 与实验室值仅 r = 0.70（同为约 53 mL/kg/min 的人，IR1 距离可从 1450 到 2600 m）；Léger 成人式 r = 0.90、SEE 约 4.4 mL/kg/min；30-15 公式 r = 0.82。追踪进步时直接比距离、级数或 V<sub>IFT</sub>（30-15 典型误差约 0.3 km/h，提高 1 级 0.5 km/h 就算真实变化）。
+          </li>
+          <li>
+            <span class="note-label">复测条件</span>
+            同一场地、同一地面和鞋（草地、塑胶、木地板差别明显）、同一音频版本、相近时间与热身；测前 24–48 小时避免大强度。往返跑与 30-15 的级数换算只对本页写明的版本成立。
+          </li>
+          <li>
+            <span class="note-label">30-15 定间歇</span>
+            每趟距离 = V<sub>IFT</sub> ÷ 3.6 × 百分比 × 秒数。往返跑每转身一次扣 0.7 秒（Buchheit 2008），所以 40 m 往返的距离比直线短。Buchheit 建议间歇强度在 85–100% V<sub>IFT</sub>，15 s/15 s 常用 95–100%。
+          </li>
+          <li>
             <span class="note-label">步行功能</span>
             6 分钟步行、步速、起坐等见「功能」。那些测试不估最大摄氧量。
           </li>
         </ol>
       </section>
     </main>
-    <footer class="site-footer">训练测算 · 非实验室诊断 · Cooper · Rockport · Daniels · ACSM GETP · Enright 1998</footer>
+    <footer class="site-footer">训练测算 · 非实验室诊断 · Cooper · Rockport · Daniels · ACSM GETP · Enright 1998 · Bangsbo 2008 · Léger 1988 · Buchheit 2008/2010</footer>
     <script type="module" src="/src/pages/vo2.ts"></script>
   </body>
 </html>

@@ -9,6 +9,14 @@ import {
 } from "../lib/format";
 import { cooperVo2, mile15Vo2, rockportVo2, stepTestVo2 } from "../lib/vo2";
 import {
+  IFT_INTERVAL_FRACTIONS,
+  ift3015Vo2,
+  iftIntervalDistance,
+  legerStageSpeed,
+  legerVo2,
+  yoyoVo2,
+} from "../lib/fieldtests";
+import {
   acsmSpeedWarning,
   cyclingVo2,
   runningVo2Acsm,
@@ -122,6 +130,105 @@ function render(): void {
       <div class="block">
       <p class="result-kicker">YMCA 式（Tanaka 变体）功率车外推</p>
       <p class="result-method range-note" role="alert">无法计算：${problem ?? "输入无效。"}</p>
+      </div>
+    `);
+    }
+  }
+
+  const yyLevel = inputValue("yy-level") === "ir2" ? "ir2" : "ir1";
+  const yyM = parseNumber(inputValue("yy-m"));
+  if (yyM !== null) {
+    const vo2 = yoyoVo2(yyLevel, yyM);
+    const label = yyLevel === "ir1" ? "IR1" : "IR2";
+    const formula = yyLevel === "ir1" ? "距离 × 0.0084 + 36.4" : "距离 × 0.0136 + 45.3";
+    const r = yyLevel === "ir1" ? "0.70" : "0.58";
+    parts.push(
+      vo2 !== null
+        ? `
+      <div class="block">
+      <p class="result-kicker">Yo-Yo ${label}</p>
+      <p class="result-value">${formatVo2(vo2)}<small>mL/kg/min</small></p>
+      <p class="result-method">VO₂max = ${formula}（Bangsbo 2008）。距离 ${yyM} m。与实验室值仅 r = ${r}，追踪请直接比距离。</p>
+      </div>
+    `
+        : `
+      <div class="block">
+      <p class="result-kicker">Yo-Yo ${label}</p>
+      <p class="result-method range-note" role="alert">无法计算：距离需在 40–4000 m。</p>
+      </div>
+    `,
+    );
+  }
+
+  const srStage = parseNumber(inputValue("sr-stage"));
+  const srAge = parseNumber(inputValue("sr-age"));
+  if (srStage !== null && srAge !== null) {
+    const speed = legerStageSpeed(srStage);
+    const vo2 = legerVo2(srStage, srAge);
+    if (speed !== null && vo2 !== null) {
+      const adult = srAge >= 18;
+      parts.push(`
+      <div class="block">
+      <p class="result-kicker">20 m 往返跑（Léger 1988）</p>
+      <p class="result-value">${formatVo2(vo2)}<small>mL/kg/min</small></p>
+      <p class="result-method">第 ${srStage} 级 = ${speed.toFixed(1)} km/h。${
+        adult
+          ? "成人式：年龄固定取 18，约 −27.4 + 6.0 × 速度。"
+          : `儿童式：31.025 + 3.238S − 3.248A + 0.1536AS，A = ${srAge}。`
+      }</p>
+      </div>
+    `);
+    } else {
+      parts.push(`
+      <div class="block">
+      <p class="result-kicker">20 m 往返跑（Léger 1988）</p>
+      <p class="result-method range-note" role="alert">无法计算：级数需为 1–21 的整数，年龄 6–90 岁。</p>
+      </div>
+    `);
+    }
+  }
+
+  const iftV = parseNumber(inputValue("ift-v"));
+  const iftAge = parseNumber(inputValue("ift-age"));
+  const iftKg = parseNumber(inputValue("ift-kg"));
+  const iftSex = checkedSex("ift-sex");
+  if (iftV !== null) {
+    const vo2 =
+      iftAge !== null && iftKg !== null && iftSex !== null
+        ? ift3015Vo2({ viftKmh: iftV, age: iftAge, sex: iftSex, weightKg: iftKg })
+        : null;
+    const rows = IFT_INTERVAL_FRACTIONS.map((fraction) => {
+      const straight = iftIntervalDistance(iftV, fraction, 15);
+      const shuttle = iftIntervalDistance(iftV, fraction, 15, 40);
+      if (straight === null || shuttle === null) return "";
+      return `<tr>
+        <td>${Math.round(fraction * 100)}%</td>
+        <td class="mono">${straight.meters.toFixed(1)} m</td>
+        <td class="mono">${shuttle.meters.toFixed(1)} m</td>
+      </tr>`;
+    }).join("");
+    if (rows === "") {
+      parts.push(`
+      <div class="block">
+      <p class="result-kicker">30-15 IFT</p>
+      <p class="result-method range-note" role="alert">无法计算：V<sub>IFT</sub> 需在 8–28 km/h。</p>
+      </div>
+    `);
+    } else {
+      parts.push(`
+      <div class="block">
+      <p class="result-kicker">30-15 IFT · V<sub>IFT</sub> ${iftV} km/h</p>
+      ${
+        vo2 !== null
+          ? `<p class="result-value">${formatVo2(vo2)}<small>mL/kg/min</small></p>
+      <p class="result-method">28.3 − 2.15G − 0.741A − 0.0357W + 0.0586A·V + 1.03V。验证样本为约 16 岁青少年（r = 0.82），成人仅供参考。</p>`
+          : `<p class="result-method">补上年龄、体重和性别可估 VO₂max。下面的间歇距离只需要 V<sub>IFT</sub>。</p>`
+      }
+      <table class="result-table">
+        <thead><tr><th>15 s 跑 / 15 s 停</th><th>直线</th><th>40 m 往返</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <p class="result-method">每趟距离 = V<sub>IFT</sub> ÷ 3.6 × 百分比 × 15 s；往返每转身一次扣 0.7 s（Buchheit 2008）。Buchheit 列出的 15 s/15 s 方案用 95–100%（2008 年验证用 95%），90% 是更保守的选择；间歇整体建议范围 85–100%。</p>
       </div>
     `);
     }
