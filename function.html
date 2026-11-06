@@ -17,13 +17,13 @@
     <title>6分钟步行与老年人功能筛查 · Field Lab</title>
     <meta
       name="description"
-      content="6 分钟步行、常速、5 次起坐、TUG、握力。对照 AWGS 2019 与 EWGSOP2 切点。筛查不是诊断，也不是 VO₂max。"
+      content="6 分钟步行、常速、5 次起坐、SPPB、TUG、握力。对照 AWGS 2019 与 EWGSOP2 切点。筛查不是诊断，也不是 VO₂max。"
     />
     <link rel="canonical" href="https://chengrui24.github.io/field-lab/function.html" />
     <meta property="og:title" content="6分钟步行与老年人功能筛查 · Field Lab" />
     <meta
       property="og:description"
-      content="6 分钟步行、常速、5 次起坐、TUG、握力。对照 AWGS 2019 与 EWGSOP2 切点。筛查不是诊断，也不是 VO₂max。"
+      content="6 分钟步行、常速、5 次起坐、SPPB、TUG、握力。对照 AWGS 2019 与 EWGSOP2 切点。筛查不是诊断，也不是 VO₂max。"
     />
     <meta property="og:url" content="https://chengrui24.github.io/field-lab/function.html" />
     <meta property="og:type" content="website" />
@@ -85,6 +85,11 @@
             <td>CDC STEADI：社区老年人 ≥12 秒作跌倒筛查注意</td>
           </tr>
           <tr>
+            <td>SPPB 简易体能</td>
+            <td>平衡 + 4 m 常速 + 5 次起坐，0–12 分</td>
+            <td>Guralnik 1994：0–3 / 4–6 / 7–9 / 10–12 分；EWGSOP2：≤8 分为体能表现低下</td>
+          </tr>
+          <tr>
             <td>握力</td>
             <td>上肢肌力</td>
             <td>AWGS 2019：男 &lt;28 kg、女 &lt;18 kg；EWGSOP2：男 &lt;27 kg、女 &lt;16 kg。确诊肌少症还需要肌量</td>
@@ -139,18 +144,21 @@
           </div>
           <div class="block">
             <h2>常速步行</h2>
-            <p class="protocol">用平时走路的速度，不要比赛。AWGS 用 6 m；4 m 也可以，关键是距离和时间都量准。</p>
+            <p class="protocol">用平时走路的速度，不要比赛。距离默认 4 m（SPPB 用）；按 AWGS 走 6 m 就改距离，但不计入 SPPB。关键是距离和时间都量准。</p>
             <ol class="steps">
-              <li>标出 4 m 或 6 m 的平路。两端再留加速/减速区更好，只计中间这段。</li>
-              <li>以「去买菜」那样的平常速度走过去，记下秒数。可走两次取较好或平均。</li>
+              <li>标出 4 m（或 6 m）的平路。SPPB 从静止站立起步计时。</li>
+              <li>以「去买菜」那样的平常速度走过去，记下秒数。走两次，填较快的一次。</li>
             </ol>
             <div class="field">
               <label for="gait-m">测试距离（米）</label>
-              <input id="gait-m" type="number" inputmode="decimal" min="3" max="20" step="0.1" placeholder="6" />
+              <input id="gait-m" type="number" inputmode="decimal" min="3" max="20" step="0.1" value="4" placeholder="4" />
             </div>
             <div class="field">
               <label for="gait-sec">用时（秒）</label>
-              <input id="gait-sec" type="number" inputmode="decimal" min="1" max="40" step="0.1" placeholder="例如 6.5" />
+              <input id="gait-sec" type="number" inputmode="decimal" min="1" max="40" step="0.1" placeholder="例如 5.5" />
+            </div>
+            <div class="radios">
+              <label><input type="checkbox" id="gait-unable" /> 做不到（SPPB 步行记 0 分）</label>
             </div>
           </div>
           <div class="block">
@@ -165,6 +173,40 @@
               <label for="sts-sec">5 次用时（秒）</label>
               <input id="sts-sec" type="number" inputmode="decimal" min="4" max="60" step="0.1" placeholder="例如 11.0" />
             </div>
+            <div class="radios">
+              <label><input type="checkbox" id="sts-unable" /> 做不到 / 超过 60 秒（SPPB 记 0 分）</label>
+            </div>
+          </div>
+          <div class="block">
+            <h2>SPPB 平衡</h2>
+            <p class="protocol">SPPB（Short Physical Performance Battery）= 平衡 + 上面的 4 m 常速 + 5 次起坐，各 0–4 分。三项都有就自动出总分。</p>
+            <ol class="steps">
+              <li>依次做并脚站、半前后脚（一只脚跟靠在另一只脚拇趾旁）、前后脚（一字站，脚跟贴脚尖），每种最多站 10 秒，不扶东西。</li>
+              <li>旁边必须有人贴身保护。某一种没站满 10 秒，后面的就不做，记 0 分。</li>
+            </ol>
+            <fieldset class="field radio-group">
+              <legend>并脚站 10 秒</legend>
+              <div class="radios">
+                <label><input type="radio" name="bal-side" value="1" /> 站满</label>
+                <label><input type="radio" name="bal-side" value="0" /> 没站满</label>
+              </div>
+            </fieldset>
+            <fieldset class="field radio-group" id="bal-semi-group">
+              <legend>半前后脚 10 秒</legend>
+              <div class="radios">
+                <label><input type="radio" name="bal-semi" value="1" /> 站满</label>
+                <label><input type="radio" name="bal-semi" value="0" /> 没站满</label>
+              </div>
+            </fieldset>
+            <fieldset class="field radio-group" id="bal-tandem-group">
+              <legend>前后脚（一字站）</legend>
+              <div class="radios">
+                <label><input type="radio" name="bal-tandem" value="10" /> 10 秒</label>
+                <label><input type="radio" name="bal-tandem" value="3" /> 3–9.9 秒</label>
+                <label><input type="radio" name="bal-tandem" value="0" /> &lt;3 秒</label>
+              </div>
+            </fieldset>
+            <p class="field-note" id="bal-skip-note" hidden></p>
           </div>
           <div class="block">
             <h2>起立–行走 TUG</h2>
@@ -227,7 +269,7 @@
         </ol>
       </section>
     </main>
-    <footer class="site-footer">训练测算 · 筛查不是诊断 · Enright 1998 · AWGS 2019 · EWGSOP2 · CDC STEADI</footer>
+    <footer class="site-footer">训练测算 · 筛查不是诊断 · Enright 1998 · AWGS 2019 · EWGSOP2 · Guralnik 1994 SPPB · CDC STEADI</footer>
     <script type="module" src="/src/pages/function.ts"></script>
   </body>
 </html>

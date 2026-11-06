@@ -98,6 +98,136 @@ export function tugReading(seconds: number): { headline: string; note: string } 
   };
 }
 
+/** SPPB cut-offs are published to 0.01 s (EPESE sheet); round first so the gaps between bands are unambiguous. */
+function hundredths(seconds: number): number {
+  return Math.round(seconds * 100) / 100;
+}
+
+/** Guralnik 1994 / EPESE: full tandem ≥10 s = 2, 3–9.99 s = 1, <3 s = 0. */
+export function sppbTandemScore(seconds: number): number {
+  const t = hundredths(seconds);
+  if (t >= 10) return 2;
+  if (t >= 3) return 1;
+  return 0;
+}
+
+/**
+ * Side-by-side and semi-tandem are held-10-s yes/no. A failed stand ends the balance series
+ * (later stands are not attempted and score 0). Returns null while the series is incomplete.
+ */
+export function sppbBalanceScore(args: {
+  sideBySideHeld: boolean | null;
+  semiTandemHeld: boolean | null;
+  tandemSec: number | null;
+}): number | null {
+  if (args.sideBySideHeld === null) return null;
+  if (!args.sideBySideHeld) return 0;
+  if (args.semiTandemHeld === null) return null;
+  if (!args.semiTandemHeld) return 1;
+  if (args.tandemSec === null) return null;
+  return 2 + sppbTandemScore(args.tandemSec);
+}
+
+/** 4 m usual pace, faster of two trials: <4.82 = 4; 4.82–6.20 = 3; 6.21–8.70 = 2; >8.70 = 1. */
+export function sppbGaitScore(seconds: number): number {
+  const t = hundredths(seconds);
+  if (t < 4.82) return 4;
+  if (t <= 6.2) return 3;
+  if (t <= 8.7) return 2;
+  return 1;
+}
+
+/** 5 rises: ≤11.19 = 4; 11.20–13.69 = 3; 13.70–16.69 = 2; 16.70–60 = 1; >60 s = 0. */
+export function sppbChairScore(seconds: number): number {
+  const t = hundredths(seconds);
+  if (t <= 11.19) return 4;
+  if (t <= 13.69) return 3;
+  if (t <= 16.69) return 2;
+  if (t <= 60) return 1;
+  return 0;
+}
+
+export const SPPB_GAIT_M = 4;
+export const SPPB_EWGSOP2_LOW_MAX = 8;
+
+export type SppbComponent = "balance" | "gait" | "chair";
+
+export const SPPB_COMPONENT_LABEL: Record<SppbComponent, string> = {
+  balance: "平衡",
+  gait: "4 m 步行",
+  chair: "5 次起坐",
+};
+
+export type SppbBand = { range: string; label: string };
+
+export function sppbBand(total: number): SppbBand {
+  if (total <= 3) return { range: "0–3", label: "重度活动受限" };
+  if (total <= 6) return { range: "4–6", label: "中度活动受限" };
+  if (total <= 9) return { range: "7–9", label: "轻度活动受限" };
+  return { range: "10–12", label: "无或极轻活动受限" };
+}
+
+export type SppbResult = {
+  balance: number | null;
+  gait: number | null;
+  chair: number | null;
+  /** Gait time was entered over a distance other than 4 m, so it cannot be scored. */
+  gaitWrongDistance: boolean;
+  missing: SppbComponent[];
+  total: number | null;
+  band: SppbBand | null;
+  /** EWGSOP2 (Cruz-Jentoft 2019): SPPB ≤ 8 = poor physical performance. */
+  ewgsop2Low: boolean | null;
+};
+
+export function sppbResult(args: {
+  sideBySideHeld: boolean | null;
+  semiTandemHeld: boolean | null;
+  tandemSec: number | null;
+  gaitUnable: boolean;
+  gaitDistanceM: number | null;
+  gaitSec: number | null;
+  chairUnable: boolean;
+  chairSec: number | null;
+}): SppbResult {
+  const balance = sppbBalanceScore(args);
+
+  let gait: number | null = null;
+  let gaitWrongDistance = false;
+  if (args.gaitUnable) gait = 0;
+  else if (args.gaitSec !== null && args.gaitSec > 0) {
+    if (args.gaitDistanceM !== null && Math.abs(args.gaitDistanceM - SPPB_GAIT_M) < 1e-9) {
+      gait = sppbGaitScore(args.gaitSec);
+    } else {
+      gaitWrongDistance = true;
+    }
+  }
+
+  let chair: number | null = null;
+  if (args.chairUnable) chair = 0;
+  else if (args.chairSec !== null && args.chairSec > 0) chair = sppbChairScore(args.chairSec);
+
+  const missing: SppbComponent[] = [];
+  if (balance === null) missing.push("balance");
+  if (gait === null) missing.push("gait");
+  if (chair === null) missing.push("chair");
+
+  if (balance === null || gait === null || chair === null) {
+    return { balance, gait, chair, gaitWrongDistance, missing, total: null, band: null, ewgsop2Low: null };
+  }
+  const total = balance + gait + chair;
+  return {
+    balance,
+    gait,
+    chair,
+    gaitWrongDistance,
+    missing,
+    total,
+    band: sppbBand(total),
+    ewgsop2Low: total <= SPPB_EWGSOP2_LOW_MAX,
+  };
+}
+
 export function gripReading(kg: number, sex: Sex): { headline: string; note: string } {
   const awgs = sex === "male" ? 28 : 18;
   const ewg = sex === "male" ? 27 : 16;
