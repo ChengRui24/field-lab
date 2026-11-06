@@ -22,6 +22,7 @@ export const PAGES: readonly SitePage[] = [
   { file: "strength.html", path: "/strength.html", name: "1RM 与负荷", priority: "0.8" },
   { file: "critical.html", path: "/critical.html", name: "临界功率与临界速度", priority: "0.8" },
   { file: "fuel.html", path: "/fuel.html", name: "供能、补剂与出汗率", priority: "0.8" },
+  { file: "load.html", path: "/load.html", name: "训练负荷", priority: "0.8" },
 ];
 
 export function pageUrl(path: string): string {

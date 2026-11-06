@@ -12,7 +12,8 @@ export type PageId =
   | "strength"
   | "critical"
   | "fuel"
-  | "durability";
+  | "durability"
+  | "load";
 
 const LINKS: { id: PageId; href: string; label: string }[] = [
   { id: "hr", href: "./hr.html", label: "心率" },
@@ -24,6 +25,7 @@ const LINKS: { id: PageId; href: string; label: string }[] = [
   { id: "critical", href: "./critical.html", label: "临界" },
   { id: "fuel", href: "./fuel.html", label: "供能" },
   { id: "durability", href: "./durability.html", label: "脱耦联" },
+  { id: "load", href: "./load.html", label: "训练负荷" },
 ];
 
 const SINGLE_COLUMN = "(max-width: 860px)";

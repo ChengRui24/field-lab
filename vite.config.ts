@@ -160,6 +160,7 @@ export default defineConfig({
         fuel: resolve(root, "fuel.html"),
         function: resolve(root, "function.html"),
         durability: resolve(root, "durability.html"),
+        load: resolve(root, "load.html"),
       },
     },
   },
