@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   cooperVo2,
+  equivalentRaces,
   mile15Vo2,
   paceAtVdotPercent,
   predictRaceMinutes,
@@ -80,6 +81,39 @@ describe("VDOT (Daniels & Gilbert)", () => {
       if (expected === null) return;
       expect(Math.abs(got[i] - sec(expected))).toBeLessThanOrEqual(3);
     });
+  });
+
+  // The published table's marathon (3:10:49) sits ~9 s slower than the Daniels–Gilbert equations give (3:10:40).
+  it.each([
+    [5000, "19:57", 5],
+    [10000, "41:21", 5],
+    [21097.5, "1:31:35", 5],
+    [42195, "3:10:49", 10],
+  ])("equivalentRaces(50) · %s m ≈ %s (±%s s)", (meters, time, tolerance) => {
+    const parts = time.split(":").map(Number);
+    const expectedSec = parts.length === 3 ? parts[0] * 3600 + parts[1] * 60 + parts[2] : parts[0] * 60 + parts[1];
+    const race = equivalentRaces(50).find((r) => r.meters === meters);
+    expect(race).toBeDefined();
+    expect(Math.abs(race!.minutes * 60 - expectedSec)).toBeLessThanOrEqual(tolerance);
+  });
+
+  it("equivalentRaces round-trips to the same VDOT", () => {
+    const vdot = vdotFromRace(10000, 41 + 21 / 60);
+    for (const race of equivalentRaces(vdot)) {
+      expect(Math.abs(vdotFromRace(race.meters, race.minutes) - vdot)).toBeLessThanOrEqual(0.1);
+      expect(race.pace).toBeCloseTo((race.minutes * 60 * 1000) / race.meters, 6);
+    }
+  });
+
+  it("equivalentRaces: longer distance → longer time and slower pace", () => {
+    for (const vdot of [30, 50, 70]) {
+      const races = equivalentRaces(vdot);
+      for (let i = 1; i < races.length; i += 1) {
+        expect(races[i].meters).toBeGreaterThan(races[i - 1].meters);
+        expect(races[i].minutes).toBeGreaterThan(races[i - 1].minutes);
+        expect(races[i].pace).toBeGreaterThan(races[i - 1].pace);
+      }
+    }
   });
 
   it("regression: paces are sec/km, never minutes", () => {

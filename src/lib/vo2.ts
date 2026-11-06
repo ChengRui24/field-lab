@@ -86,6 +86,29 @@ export function predictRaceMinutes(vdot: number, distanceMeters: number): number
   return (fast + slow) / 2;
 }
 
+export const EQUIVALENT_RACE_DISTANCES = [
+  { meters: 5000, label: "5 km" },
+  { meters: 10000, label: "10 km" },
+  { meters: 21097.5, label: "半马" },
+  { meters: 42195, label: "全马" },
+] as const;
+
+export type EquivalentRace = {
+  meters: number;
+  label: string;
+  minutes: number;
+  /** Average pace in sec/km. */
+  pace: number;
+};
+
+/** Race times the same VDOT predicts at standard distances (Daniels–Gilbert). */
+export function equivalentRaces(vdot: number): EquivalentRace[] {
+  return EQUIVALENT_RACE_DISTANCES.map(({ meters, label }) => {
+    const minutes = predictRaceMinutes(vdot, meters);
+    return { meters, label, minutes, pace: (minutes * 60 * 1000) / meters };
+  });
+}
+
 /**
  * Fractions of VDOT fitted to Daniels' Running Formula training-pace table
  * (VDOT 30–70, within ~3 s/km). M is not a fixed fraction: it is the predicted marathon pace.

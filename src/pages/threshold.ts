@@ -18,7 +18,17 @@ import {
   raceToLt2Pace,
   type RaceDistance,
 } from "../lib/threshold";
-import { VDOT_FRACTIONS, vdotFromRace, vdotTrainingPaces } from "../lib/vo2";
+import { VDOT_FRACTIONS, equivalentRaces, vdotFromRace, vdotTrainingPaces } from "../lib/vo2";
+
+/** Whole-second race time: m:ss below an hour, h:mm:ss above. */
+function formatRaceTime(minutes: number): string {
+  if (!Number.isFinite(minutes) || minutes <= 0) return "—";
+  const total = Math.round(minutes * 60);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = String(total % 60).padStart(2, "0");
+  return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${s}` : `${m}:${s}`;
+}
 
 function parseDistance(raw: string): RaceDistance {
   if (raw === "10k" || raw === "half" || raw === "full") return raw;
@@ -142,6 +152,16 @@ function render(): void {
       </tr>`,
       )
       .join("");
+    const equivalentRows = equivalentRaces(vdot)
+      .map((race) => {
+        const own = Math.abs(race.meters - vdotMeters) < 1;
+        return `<tr>
+        <td>${own ? `<strong>${race.label}</strong>（你的成绩）` : race.label}</td>
+        <td class="mono">${formatRaceTime(race.minutes)}</td>
+        <td class="mono">${formatPace(race.pace)}/km</td>
+      </tr>`;
+      })
+      .join("");
     parts.push(`
       <div class="block">
       <p class="result-kicker">Daniels VDOT</p>
@@ -150,6 +170,12 @@ function render(): void {
       <table class="result-table">
         <thead><tr><th>区间</th><th>配速</th><th>强度</th><th>用途</th></tr></thead>
         <tbody>${rows}</tbody>
+      </table>
+      <p class="result-kicker">等效成绩</p>
+      <p class="result-method">同一 VDOT 在其他距离的预测成绩，前提是针对该距离做过相应训练。用 5K/10K 推全马时，缺少马拉松专项跑量的跑者通常跑不到这个成绩（Daniels' Running Formula）。</p>
+      <table class="result-table">
+        <thead><tr><th>距离</th><th>预测成绩</th><th>平均配速</th></tr></thead>
+        <tbody>${equivalentRows}</tbody>
       </table>
       </div>
     `);
