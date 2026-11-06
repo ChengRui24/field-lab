@@ -70,8 +70,8 @@
             <td>同一配速心率升高，或同一心率配速下降，比值都会变大</td>
           </tr>
           <tr>
-            <td>脱耦联 %</td>
-            <td>(后半比值 / 前半比值 − 1) × 100</td>
+            <td>脱耦联 %（TrainingPeaks / Friel Pa:HR、Pw:HR）</td>
+            <td>EF（efficiency factor）= 速度或功率 ÷ 心率；脱耦联 = (EF前 − EF后) / EF前 × 100</td>
             <td>正值表示后半更费。训练中常把约 5% 当作「值得注意」，不是硬阈值</td>
           </tr>
         </tbody>
@@ -85,46 +85,46 @@
               <li>选地形、意图都差不多的一段课，例如平路轻松跑的前半 vs 后半。不要拿爬坡去对平路。</li>
               <li>跑步填两段平均配速和平均心率；骑行改选功率，填两段平均瓦数和心率。</li>
             </ol>
-            <div class="field">
-              <label>外部做功</label>
+            <fieldset class="field radio-group">
+              <legend>外部做功</legend>
               <div class="radios">
                 <label><input type="radio" name="dc-mode" value="pace" checked /> 配速（跑步）</label>
                 <label><input type="radio" name="dc-mode" value="power" /> 功率（骑行）</label>
               </div>
-            </div>
+            </fieldset>
           </div>
           <div class="block">
             <h2>前半段</h2>
             <div class="field" id="dc-early-pace-wrap">
               <label for="dc-early-pace">平均配速（min/km）</label>
-              <input id="dc-early-pace" type="text" data-time="pace" placeholder="5:20 或 520" />
+              <input id="dc-early-pace" type="text" inputmode="decimal" data-time="pace" placeholder="5:20 或 520" />
             </div>
             <div class="field" id="dc-early-power-wrap" hidden>
               <label for="dc-early-power">平均功率（W）</label>
-              <input id="dc-early-power" type="number" min="50" max="2000" step="1" />
+              <input id="dc-early-power" type="number" inputmode="numeric" min="50" max="2000" step="1" />
             </div>
             <div class="field">
               <label for="dc-early-hr">平均心率（bpm）</label>
-              <input id="dc-early-hr" type="number" min="80" max="220" step="1" />
+              <input id="dc-early-hr" type="number" inputmode="numeric" min="80" max="220" step="1" />
             </div>
           </div>
           <div class="block">
             <h2>后半段</h2>
             <div class="field" id="dc-late-pace-wrap">
               <label for="dc-late-pace">平均配速（min/km）</label>
-              <input id="dc-late-pace" type="text" data-time="pace" placeholder="5:28 或 528" />
+              <input id="dc-late-pace" type="text" inputmode="decimal" data-time="pace" placeholder="5:28 或 528" />
             </div>
             <div class="field" id="dc-late-power-wrap" hidden>
               <label for="dc-late-power">平均功率（W）</label>
-              <input id="dc-late-power" type="number" min="50" max="2000" step="1" />
+              <input id="dc-late-power" type="number" inputmode="numeric" min="50" max="2000" step="1" />
             </div>
             <div class="field">
               <label for="dc-late-hr">平均心率（bpm）</label>
-              <input id="dc-late-hr" type="number" min="80" max="220" step="1" />
+              <input id="dc-late-hr" type="number" inputmode="numeric" min="80" max="220" step="1" />
             </div>
           </div>
         </form>
-        <div class="panel results" id="dc-results">
+        <div class="panel results" id="dc-results" aria-live="polite">
           <h2>结果</h2>
           <p class="result-empty" id="dc-empty">填入前半、后半的心率与配速或功率。</p>
           <div id="dc-output" hidden></div>

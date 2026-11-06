@@ -102,28 +102,28 @@
               <li>至少填两次。页面按 P = CP + W′ / t 拟合。</li>
             </ol>
             <div class="field">
-              <label for="cp-t1">测试 1 时间</label>
-              <input id="cp-t1" type="text" data-time="duration" placeholder="3:00 或 300" />
+              <label for="cp-t1">测试 1 时间（分:秒）</label>
+              <input id="cp-t1" type="text" inputmode="decimal" data-time="duration" placeholder="3:00 或 300" />
             </div>
             <div class="field">
               <label for="cp-p1">测试 1 平均功率（W）</label>
-              <input id="cp-p1" type="number" min="50" max="2000" step="1" />
+              <input id="cp-p1" type="number" inputmode="numeric" min="50" max="2000" step="1" />
             </div>
             <div class="field">
-              <label for="cp-t2">测试 2 时间</label>
-              <input id="cp-t2" type="text" data-time="duration" placeholder="12:00 或 1200" />
+              <label for="cp-t2">测试 2 时间（分:秒）</label>
+              <input id="cp-t2" type="text" inputmode="decimal" data-time="duration" placeholder="12:00 或 1200" />
             </div>
             <div class="field">
               <label for="cp-p2">测试 2 平均功率（W）</label>
-              <input id="cp-p2" type="number" min="50" max="2000" step="1" />
+              <input id="cp-p2" type="number" inputmode="numeric" min="50" max="2000" step="1" />
             </div>
             <div class="field">
-              <label for="cp-t3">测试 3 时间（可选）</label>
-              <input id="cp-t3" type="text" data-time="duration" placeholder="留空则用两次拟合" />
+              <label for="cp-t3">测试 3 时间（分:秒，可选）</label>
+              <input id="cp-t3" type="text" inputmode="decimal" data-time="duration" placeholder="留空则用两次拟合" />
             </div>
             <div class="field">
               <label for="cp-p3">测试 3 平均功率（W，可选）</label>
-              <input id="cp-p3" type="number" min="50" max="2000" step="1" />
+              <input id="cp-p3" type="number" inputmode="numeric" min="50" max="2000" step="1" />
             </div>
           </div>
           <div class="block">
@@ -135,7 +135,7 @@
             </ol>
             <div class="field">
               <label for="ftp-20">20 分钟平均功率（W）</label>
-              <input id="ftp-20" type="number" min="50" max="2000" step="1" />
+              <input id="ftp-20" type="number" inputmode="numeric" min="50" max="2000" step="1" />
             </div>
           </div>
           <div class="block">
@@ -147,19 +147,19 @@
             </ol>
             <div class="field">
               <label for="cs-d1">距离 1（m）</label>
-              <input id="cs-d1" type="number" min="400" max="10000" step="1" placeholder="1200" />
+              <input id="cs-d1" type="number" inputmode="decimal" min="400" max="10000" step="1" placeholder="1200" />
             </div>
             <div class="field">
-              <label for="cs-t1">成绩 1</label>
-              <input id="cs-t1" type="text" data-time="duration" placeholder="3:40 或 340" />
+              <label for="cs-t1">成绩 1（分:秒）</label>
+              <input id="cs-t1" type="text" inputmode="decimal" data-time="duration" placeholder="3:40 或 340" />
             </div>
             <div class="field">
               <label for="cs-d2">距离 2（m）</label>
-              <input id="cs-d2" type="number" min="400" max="21097" step="1" placeholder="3000" />
+              <input id="cs-d2" type="number" inputmode="decimal" min="400" max="21097" step="1" placeholder="3000" />
             </div>
             <div class="field">
-              <label for="cs-t2">成绩 2</label>
-              <input id="cs-t2" type="text" data-time="duration" placeholder="10:30 或 1030" />
+              <label for="cs-t2">成绩 2（分:秒）</label>
+              <input id="cs-t2" type="text" inputmode="decimal" data-time="duration" placeholder="10:30 或 1030" />
             </div>
           </div>
           <div class="block">
@@ -170,16 +170,16 @@
               <li>记下成绩。CSS = 200 / (T400 − T200)，可换成 /100 m。</li>
             </ol>
             <div class="field">
-              <label for="css-200">200 m 成绩</label>
-              <input id="css-200" type="text" data-time="duration" placeholder="2:20 或 220" />
+              <label for="css-200">200 m 成绩（分:秒）</label>
+              <input id="css-200" type="text" inputmode="decimal" data-time="duration" placeholder="2:20 或 220" />
             </div>
             <div class="field">
-              <label for="css-400">400 m 成绩</label>
-              <input id="css-400" type="text" data-time="duration" placeholder="5:00 或 500" />
+              <label for="css-400">400 m 成绩（分:秒）</label>
+              <input id="css-400" type="text" inputmode="decimal" data-time="duration" placeholder="5:00 或 500" />
             </div>
           </div>
         </form>
-        <div class="panel results" id="cp-results">
+        <div class="panel results" id="cp-results" aria-live="polite">
           <h2>结果</h2>
           <p class="result-empty" id="cp-empty">在左侧完成任一组测试。</p>
           <div id="cp-output" hidden></div>

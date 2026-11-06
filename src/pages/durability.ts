@@ -54,9 +54,18 @@ function render(): void {
   const early = workRatio(earlyHr, earlyExt);
   const late = workRatio(lateHr, lateExt);
   if (early === null || late === null) {
-    empty.hidden = false;
-    output.hidden = true;
-    output.innerHTML = "";
+    const reason =
+      earlyHr <= 0 || lateHr <= 0
+        ? "心率必须大于 0。"
+        : mode === "pace"
+          ? "配速必须大于 0。"
+          : "功率为 0 时无法计算（滑行、停踩段会把比值拉到无穷）。请只截取持续踩踏的稳定段，两段平均功率都要大于 0。";
+    empty.hidden = true;
+    output.hidden = false;
+    output.innerHTML = `
+    <p class="result-kicker">${unit}</p>
+    <p class="result-method">${reason}</p>
+  `;
     return;
   }
 
@@ -69,7 +78,7 @@ function render(): void {
   output.innerHTML = `
     <p class="result-kicker">${unit}</p>
     <p class="result-value">${formatPct(pct)}</p>
-    <p class="result-method">${reading} 前半比值 ${early.toFixed(3)}，后半 ${late.toFixed(3)}。约 5% 是训练实践中的注意线，不是诊断切点。</p>
+    <p class="result-method">${reading} 前半心率/做功比 ${early.toFixed(3)}，后半 ${late.toFixed(3)}；按 EF = 做功 / 心率，脱耦联 = (EF前 − EF后) / EF前。约 5% 是训练实践中的注意线，不是诊断切点。</p>
   `;
 }
 

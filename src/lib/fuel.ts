@@ -24,9 +24,13 @@ export function carbDuring(session: CarbSession): { low: number; high: number; n
     case "short":
       return { low: 0, high: 0, note: "不足约 60 分钟通常不必在运动中额外补糖，靠日常饮食即可" };
     case "endurance":
-      return { low: 30, high: 60, note: "约 1–2.5 小时：30–60 g/h。ISSN 运动营养立场" };
+      return { low: 30, high: 60, note: "约 1–2.5 小时：30–60 g/h。ACSM/AND/DC 2016（Thomas）；Jeukendrup 2014" };
     case "ultra":
-      return { low: 60, high: 90, note: "超过约 2.5 小时：60–90 g/h，需多种可转运碳水（葡萄糖+果糖）" };
+      return {
+        low: 60,
+        high: 90,
+        note: "超过约 2.5 小时：60–90 g/h，需多种可转运碳水（葡萄糖+果糖）。ACSM/AND/DC 2016（Thomas）；Jeukendrup 2014",
+      };
     default: {
       const exhaustive: never = session;
       throw new Error(`未处理的训练时长: ${String(exhaustive)}`);
@@ -45,7 +49,7 @@ export function carbDaily(weightKg: number, day: CarbDay): { low: number; high: 
     case "high":
       return { low: 6 * weightKg, high: 10 * weightKg, note: "每天 1–3 小时" };
     case "veryHigh":
-      return { low: 8 * weightKg, high: 12 * weightKg, note: "极量耐力日，ISSN：8–12 g/kg 以维持肌糖原" };
+      return { low: 8 * weightKg, high: 12 * weightKg, note: "极量耐力日（每天 4–5 小时以上），8–12 g/kg 以维持肌糖原。ACSM/AND/DC 2016" };
     default: {
       const exhaustive: never = day;
       throw new Error(`未处理的日训练量: ${String(exhaustive)}`);
@@ -62,4 +66,37 @@ export function sweatRateLitersPerHour(args: {
 }): number {
   const loss = args.preKg - args.postKg + args.fluidL - args.urineL;
   return loss / args.hours;
+}
+
+export type SweatResult =
+  | { ok: true; litersPerHour: number; bodyMassChangePct: number }
+  | { ok: false; reason: string };
+
+export function sweatTest(args: {
+  preKg: number;
+  postKg: number;
+  fluidL: number;
+  urineL: number;
+  minutes: number;
+}): SweatResult {
+  if (!(args.preKg > 0) || !(args.postKg > 0)) {
+    return { ok: false, reason: "运动前、后体重都必须大于 0。" };
+  }
+  if (!(args.minutes > 0)) return { ok: false, reason: "运动时间必须大于 0。" };
+  if (args.fluidL < 0 || args.urineL < 0) return { ok: false, reason: "饮水量和尿量不能为负。" };
+  const litersPerHour = sweatRateLitersPerHour({
+    preKg: args.preKg,
+    postKg: args.postKg,
+    fluidL: args.fluidL,
+    urineL: args.urineL,
+    hours: args.minutes / 60,
+  });
+  if (litersPerHour < 0) {
+    return { ok: false, reason: "数据矛盾，请核对：算出的出汗量为负（体重增加超过了喝进去的量）。" };
+  }
+  return {
+    ok: true,
+    litersPerHour,
+    bodyMassChangePct: ((args.preKg - args.postKg) / args.preKg) * 100,
+  };
 }

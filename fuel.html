@@ -53,7 +53,7 @@
       <p class="kicker">Fueling</p>
       <h1>供能、补剂与出汗率</h1>
       <p class="lead">
-        按体重给出咖啡因、蛋白、肌酸和碳水区间，并用体重差估算出汗率。依据 ISSN（International Society of Sports Nutrition）运动营养立场，以及 ACSM（American College of Sports Medicine）/ AND（Academy of Nutrition and Dietetics）运动营养共识。这不是医疗处方。
+        按体重给出咖啡因、蛋白、肌酸和碳水区间，并用体重差估算出汗率。依据 ISSN（International Society of Sports Nutrition）立场，以及 ACSM（American College of Sports Medicine）/ AND（Academy of Nutrition and Dietetics）/ DC（Dietitians of Canada）2016 运动营养共识。这不是医疗处方。
       </p>
       <table class="method-table">
         <thead>
@@ -66,8 +66,8 @@
         <tbody>
           <tr>
             <td>咖啡因</td>
-            <td>3–6 mg/kg，运动前约 30–60 分钟</td>
-            <td>ISSN；耐力、力量与功率均有证据</td>
+            <td>3–6 mg/kg，运动前约 60 分钟（30–90 分钟）</td>
+            <td>ISSN 咖啡因立场（Guest 2021，<cite>JISSN</cite>）；耐力、力量与功率均有证据</td>
           </tr>
           <tr>
             <td>蛋白</td>
@@ -81,13 +81,13 @@
           </tr>
           <tr>
             <td>运动中碳水</td>
-            <td>1–2.5 h：30–60 g/h；更长：60–90 g/h（多种糖）</td>
-            <td>ISSN 营养时机立场</td>
+            <td>1–2.5 h：30–60 g/h；超过约 2.5 h：60–90 g/h（多种糖）</td>
+            <td>ACSM/AND/DC 2016（Thomas）；Jeukendrup 2014</td>
           </tr>
           <tr>
             <td>出汗率</td>
             <td>(赛前体重 − 赛后体重 + 摄入 − 尿量) / 时间</td>
-            <td>ACSM 热环境补液：现场体重差法</td>
+            <td>ACSM 运动补液立场（Sawka 2007）；Baker 2017：现场体重差法</td>
           </tr>
         </tbody>
       </table>
@@ -103,7 +103,7 @@
             </ol>
             <div class="field">
               <label for="fu-kg">体重（kg）</label>
-              <input id="fu-kg" type="number" min="30" max="200" step="0.1" placeholder="例如 70" />
+              <input id="fu-kg" type="number" inputmode="decimal" data-persist="weight" min="30" max="200" step="0.1" placeholder="例如 70" />
             </div>
             <div class="field">
               <label for="fu-session">运动中碳水 · 预计时长</label>
@@ -127,33 +127,33 @@
             <h2>出汗率</h2>
             <p class="protocol">用体重差估这一堂课每小时出了多少汗，用来指导下次补液。</p>
             <ol class="steps">
-              <li>出发前上厕所，尽量穿同一套衣物称体重（公斤）。</li>
+              <li>出发前上厕所，擦干后裸称，或穿一套干衣物称体重（公斤）。</li>
               <li>记下训练中喝了多少升水或运动饮料。中途排尿也称一下或估一下升数，没有就填 0。</li>
-              <li>结束后擦干，穿同样的湿衣服再称。填运动时间（分钟）。</li>
+              <li>结束后擦干后裸称，或换上同一套干衣物再称；前后条件一致。汗湿的衣服会把汗量算少。填运动时间（分钟）。</li>
             </ol>
             <div class="field">
               <label for="sw-pre">运动前体重（kg）</label>
-              <input id="sw-pre" type="number" min="30" max="200" step="0.1" />
+              <input id="sw-pre" type="number" inputmode="decimal" min="30" max="200" step="0.1" />
             </div>
             <div class="field">
               <label for="sw-post">运动后体重（kg）</label>
-              <input id="sw-post" type="number" min="30" max="200" step="0.1" />
+              <input id="sw-post" type="number" inputmode="decimal" min="30" max="200" step="0.1" />
             </div>
             <div class="field">
               <label for="sw-fluid">运动中喝了多少（L）</label>
-              <input id="sw-fluid" type="number" min="0" max="10" step="0.05" placeholder="0" />
+              <input id="sw-fluid" type="number" inputmode="decimal" min="0" max="10" step="0.05" placeholder="0" />
             </div>
             <div class="field">
               <label for="sw-urine">运动中尿量（L，可选）</label>
-              <input id="sw-urine" type="number" min="0" max="3" step="0.05" placeholder="0" />
+              <input id="sw-urine" type="number" inputmode="decimal" min="0" max="3" step="0.05" placeholder="0" />
             </div>
             <div class="field">
               <label for="sw-min">运动时间（分钟）</label>
-              <input id="sw-min" type="number" min="10" max="600" step="1" />
+              <input id="sw-min" type="number" inputmode="numeric" min="10" max="600" step="1" />
             </div>
           </div>
         </form>
-        <div class="panel results" id="fuel-results">
+        <div class="panel results" id="fuel-results" aria-live="polite">
           <h2>结果</h2>
           <p class="result-empty" id="fuel-empty">填写体重后给出补剂与碳水；写出汗数据后给出出汗率。</p>
           <div id="fuel-output" hidden></div>
@@ -164,7 +164,7 @@
         <ol>
           <li>
             <span class="note-label">咖啡因</span>
-            有效窗常见 3–6 mg/kg。对心率、睡眠、焦虑敏感者从低剂量开始。能量饮料的主要功效成分仍是咖啡因，不是一堆草本。
+            有效剂量常见 3–6 mg/kg，多在运动前约 60 分钟服用（Guest 2021）。对心率、睡眠、焦虑敏感者从低剂量开始。能量饮料的主要功效成分仍是咖啡因，不是一堆草本。
           </li>
           <li>
             <span class="note-label">肌酸</span>
@@ -181,7 +181,7 @@
         </ol>
       </section>
     </main>
-    <footer class="site-footer">训练测算 · 非医疗处方 · ISSN · ACSM 运动营养</footer>
+    <footer class="site-footer">训练测算 · 非医疗处方 · ISSN · ACSM/AND/DC 2016 · Jeukendrup 2014 · Sawka 2007</footer>
     <script type="module" src="/src/pages/fuel.ts"></script>
   </body>
 </html>

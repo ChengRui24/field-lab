@@ -8,7 +8,7 @@ import {
   carbDuring,
   creatineDose,
   proteinDose,
-  sweatRateLitersPerHour,
+  sweatTest,
   type CarbDay,
   type CarbSession,
 } from "../lib/fuel";
@@ -31,7 +31,7 @@ function render(): void {
   const kg = parseNumber(inputValue("fu-kg"));
   const parts: string[] = [];
 
-  if (kg !== null) {
+  if (kg !== null && kg > 0) {
     const caffeine = caffeineDose(kg);
     const protein = proteinDose(kg);
     const creatine = creatineDose(kg);
@@ -43,7 +43,7 @@ function render(): void {
         <table class="result-table">
           <thead><tr><th>项目</th><th>剂量</th><th></th></tr></thead>
           <tbody>
-            <tr><td>咖啡因</td><td class="mono">${formatGrams(caffeine.low)}–${formatGrams(caffeine.high)} mg</td><td>3–6 mg/kg</td></tr>
+            <tr><td>咖啡因</td><td class="mono">${formatGrams(caffeine.low)}–${formatGrams(caffeine.high)} mg</td><td>3–6 mg/kg，运动前约 60 分钟（30–90）</td></tr>
             <tr><td>蛋白 · 耐力</td><td class="mono">${formatGrams(protein.endurance.low)}–${formatGrams(protein.endurance.high)} g/日</td><td>1.2–1.6 g/kg</td></tr>
             <tr><td>蛋白 · 增肌</td><td class="mono">${formatGrams(protein.hypertrophy.low)}–${formatGrams(protein.hypertrophy.high)} g/日</td><td>1.6–2.2 g/kg</td></tr>
             <tr><td>肌酸负荷</td><td class="mono">${formatGrams(creatine.loading)} g/日 × 5–7 天</td><td>0.3 g/kg，可分 3–4 次</td></tr>
@@ -63,22 +63,24 @@ function render(): void {
   const minutes = parseNumber(inputValue("sw-min"));
   const fluid = parseNumber(inputValue("sw-fluid")) ?? 0;
   const urine = parseNumber(inputValue("sw-urine")) ?? 0;
-  if (pre !== null && post !== null && minutes !== null && minutes > 0) {
-    const rate = sweatRateLitersPerHour({
-      preKg: pre,
-      postKg: post,
-      fluidL: fluid,
-      urineL: urine,
-      hours: minutes / 60,
-    });
-    const lossPct = ((pre - post) / pre) * 100;
-    parts.push(`
+  if (pre !== null && post !== null && minutes !== null) {
+    const sweat = sweatTest({ preKg: pre, postKg: post, fluidL: fluid, urineL: urine, minutes });
+    parts.push(
+      sweat.ok
+        ? `
       <div class="block">
         <p class="result-kicker">出汗率</p>
-        <p class="result-value">${rate.toFixed(2)}<small>L/h</small></p>
-        <p class="result-method">（前体重 − 后体重 + 摄入 − 尿量）/ 时间。体重变化 ${lossPct.toFixed(1)}%。超过约 2% 时表现常开始受损。</p>
+        <p class="result-value">${sweat.litersPerHour.toFixed(2)}<small>L/h</small></p>
+        <p class="result-method">（前体重 − 后体重 + 摄入 − 尿量）/ 时间。体重变化 ${sweat.bodyMassChangePct.toFixed(1)}%。超过约 2% 时表现常开始受损。</p>
       </div>
-    `);
+    `
+        : `
+      <div class="block">
+        <p class="result-kicker">出汗率</p>
+        <p class="result-method">${sweat.reason}</p>
+      </div>
+    `,
+    );
   }
 
   if (parts.length === 0) {

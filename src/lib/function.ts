@@ -1,4 +1,46 @@
+import { predicted6mwd } from "./acsm";
+
 export type Sex = "male" | "female";
+
+/** Enright & Sherrill 1998: derived in healthy adults aged 40–80 y. */
+export const ENRIGHT_AGE_MIN = 40;
+export const ENRIGHT_AGE_MAX = 80;
+
+/** Enright 1998 lower limit of normal = predicted − 153 m (men) / − 139 m (women). */
+export function enrightLlnOffset(sex: Sex): number {
+  return sex === "male" ? 153 : 139;
+}
+
+export type SixMinuteWalkResult =
+  | { inRange: true; predicted: number; lln: number; pctPredicted: number }
+  | { inRange: false; reason: string };
+
+export function sixMinuteWalkReading(args: {
+  distanceM: number;
+  sex: Sex;
+  heightCm: number;
+  age: number;
+  weightKg: number;
+}): SixMinuteWalkResult {
+  if (args.age < ENRIGHT_AGE_MIN || args.age > ENRIGHT_AGE_MAX) {
+    return { inRange: false, reason: `年龄超出 Enright 方程的验证范围（${ENRIGHT_AGE_MIN}–${ENRIGHT_AGE_MAX} 岁）` };
+  }
+  const predicted = predicted6mwd({
+    sex: args.sex,
+    heightCm: args.heightCm,
+    age: args.age,
+    weightKg: args.weightKg,
+  });
+  if (!Number.isFinite(predicted) || predicted <= 0) {
+    return { inRange: false, reason: "身高、体重组合使预测值 ≤ 0" };
+  }
+  return {
+    inRange: true,
+    predicted,
+    lln: predicted - enrightLlnOffset(args.sex),
+    pctPredicted: (args.distanceM / predicted) * 100,
+  };
+}
 
 export function gaitSpeedMPerSec(distanceM: number, timeSec: number): number | null {
   if (distanceM <= 0 || timeSec <= 0) return null;
@@ -8,7 +50,7 @@ export function gaitSpeedMPerSec(distanceM: number, timeSec: number): number | n
 export function gaitSpeedReading(speed: number): { headline: string; note: string } {
   if (speed <= 0.8) {
     return {
-      headline: "低于 0.8 m/s",
+      headline: "≤ 0.8 m/s",
       note: "EWGSOP2 把 ≤0.8 m/s 作为低步行速度。AWGS 2019 的 6 m 常速切点是 <1.0 m/s。这是筛查，不是肌少症诊断。",
     };
   }
@@ -25,15 +67,15 @@ export function gaitSpeedReading(speed: number): { headline: string; note: strin
 }
 
 export function chairStandReading(seconds: number): { headline: string; note: string } {
-  if (seconds >= 15) {
+  if (seconds > 15) {
     return {
-      headline: "≥ 15 秒",
+      headline: "> 15 秒",
       note: "同时超过 AWGS 2019（≥12 秒）和 EWGSOP2（>15 秒）的 5 次起坐切点。反映下肢力量/功率偏低，不是诊断。",
     };
   }
   if (seconds >= 12) {
     return {
-      headline: "12–15 秒",
+      headline: "12–15 秒（含 15）",
       note: "达到 AWGS 2019 低体能表现切点（≥12 秒），尚未到 EWGSOP2 的 >15 秒。亚洲人群筛查更常看 12 秒。",
     };
   }
