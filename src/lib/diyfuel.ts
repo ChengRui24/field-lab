@@ -326,10 +326,13 @@ export function analyzeRecipe(args: { items: RecipeItem[]; waterGrams: number; n
     };
   }
 
+  // 反算配方的浓度会带浮点尾差（如 8.000000000000002），阈值比较留容差，避免恰好 8% / 20% 被判超标。
+  const abovePct = (limit: number): boolean => concentrationPct > limit + 1e-9;
+
   let osmolality: OsmolalityEstimate | null = null;
   let osmolalityUnavailable: RecipeAnalysis["osmolalityUnavailable"] = null;
   if (sugars === null || solventWaterGrams === null) osmolalityUnavailable = "unknownComposition";
-  else if (concentrationPct > OSMOLALITY_MAX_PCT) osmolalityUnavailable = "tooConcentrated";
+  else if (abovePct(OSMOLALITY_MAX_PCT)) osmolalityUnavailable = "tooConcentrated";
   else {
     const mOsm = idealOsmolality(
       { glucoseG: sugars.glucose, fructoseG: sugars.fructose, sucroseG: sugars.sucrose, oligoG: sugars.oligo, naclG: naclGrams },
@@ -340,8 +343,8 @@ export function analyzeRecipe(args: { items: RecipeItem[]; waterGrams: number; n
   }
 
   const warnings: RecipeWarning[] = [];
-  if (concentrationPct > DRINK_MAX_PCT) warnings.push("aboveDrinkLimit");
-  if (concentrationPct > CONCENTRATED_PCT) warnings.push("concentratedTakeWithWater");
+  if (abovePct(DRINK_MAX_PCT)) warnings.push("aboveDrinkLimit");
+  if (abovePct(CONCENTRATED_PCT)) warnings.push("concentratedTakeWithWater");
   if (solventWaterGrams !== null) {
     const exceeds =
       solventWaterGrams <= 0

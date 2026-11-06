@@ -1,5 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { caffeineDose, carbDaily, creatineDose, proteinDose, sweatTest } from "./fuel";
+import { planRecipe } from "./diyfuel";
+import {
+  caffeineDose,
+  carbDaily,
+  creatineDose,
+  diyRecipeParts,
+  proteinDose,
+  raceCarbMidpoint,
+  raceFuelPlan,
+  raceMinutesFromParts,
+  sweatTest,
+} from "./fuel";
 
 describe("doses for 70 kg", () => {
   it("caffeine 210–420 mg", () => {
@@ -44,5 +55,179 @@ describe("sweat test", () => {
     expect(r.ok).toBe(false);
     if (r.ok) return;
     expect(r.reason).toContain("数据矛盾");
+  });
+});
+
+describe("race fuel plan", () => {
+  const plan = (minutes: number, extra: { weightKg?: number | null; sweat?: number | null; gel?: number | null } = {}) =>
+    raceFuelPlan({
+      minutes,
+      weightKg: extra.weightKg === undefined ? 70 : extra.weightKg,
+      sweatLitersPerHour: extra.sweat ?? null,
+      gelGrams: extra.gel,
+    });
+
+  it("40 min → no carbohydrate needed", () => {
+    const p = plan(40);
+    expect(p?.during.band).toBe("none");
+    expect(p?.during.highPerHour).toBe(0);
+    expect(p?.during.gels).toBeNull();
+  });
+
+  it("60 min → small amounts / mouth rinse", () => {
+    const p = plan(60);
+    expect(p?.during.band).toBe("rinse");
+    expect(p?.during.gels).toBeNull();
+  });
+
+  it("2 h → 30–60 g/h, 60–120 g, 3–4 × 25 g gels every 25–50 min", () => {
+    const p = plan(120);
+    expect(p?.during.band).toBe("moderate");
+    expect(p?.during.lowPerHour).toBe(30);
+    expect(p?.during.highPerHour).toBe(60);
+    expect(p?.during.lowTotal).toBeCloseTo(60, 6);
+    expect(p?.during.highTotal).toBeCloseTo(120, 6);
+    expect(p?.during.gels).toEqual({
+      gramsPerGel: 25,
+      countLow: 3,
+      countHigh: 4,
+      intervalShortMin: 25,
+      intervalLongMin: 50,
+    });
+  });
+
+  it("2.5 h is still 30–60 g/h; just above → up to 90 g/h", () => {
+    expect(plan(150)?.during.band).toBe("moderate");
+    expect(plan(151)?.during.band).toBe("high");
+  });
+
+  it("4 h → up to 90 g/h, 240–360 g", () => {
+    const p = plan(240);
+    expect(p?.during.band).toBe("high");
+    expect(p?.during.highPerHour).toBe(90);
+    expect(p?.during.highTotal).toBeCloseTo(360, 6);
+    // 25 g ÷ 90 g/h = 16.7 min → rounds up to 20 (75 g/h); 15 would be 100 g/h, above the cap
+    expect(p?.during.gels?.intervalShortMin).toBe(20);
+    expect(p?.during.gels?.intervalLongMin).toBe(25);
+  });
+
+  it("rounded gel intervals never leave the g/h band", () => {
+    for (const gel of [7, 9.5, 13, 22, 25, 30, 40]) {
+      for (const minutes of [90, 150, 240]) {
+        const d = plan(minutes, { gel })!.during;
+        const g = d.gels!;
+        expect(g.intervalShortMin).toBeLessThanOrEqual(g.intervalLongMin);
+        expect((gel / g.intervalShortMin) * 60).toBeLessThanOrEqual(d.highPerHour + 1e-9);
+        expect((gel / g.intervalLongMin) * 60).toBeGreaterThanOrEqual(d.lowPerHour - 1e-9);
+      }
+    }
+  });
+
+  it("custom gel size changes the count", () => {
+    expect(plan(120, { gel: 40 })?.during.gels).toMatchObject({ gramsPerGel: 40, countLow: 2, countHigh: 3 });
+  });
+
+  it("blank / invalid gel size falls back to 25 g", () => {
+    expect(plan(120, { gel: null })?.during.gels?.gramsPerGel).toBe(25);
+    expect(plan(120, { gel: 0 })?.during.gels?.gramsPerGel).toBe(25);
+  });
+
+  it("pre-race 70 kg → 70–280 g; carb loading only > 90 min", () => {
+    const p = plan(120);
+    expect(p?.pre).toEqual({ applies: true, lowG: 70, highG: 280 });
+    expect(p?.carbLoading).toEqual({ lowG: 700, highG: 840 });
+    expect(p?.carbLoadingApplies).toBe(true);
+    expect(plan(90)?.carbLoadingApplies).toBe(false);
+    expect(plan(60)?.pre?.applies).toBe(false);
+  });
+
+  it("no weight → pre-race grams absent, during-race g/h still given", () => {
+    const p = plan(120, { weightKg: null });
+    expect(p?.pre).toBeNull();
+    expect(p?.carbLoading).toBeNull();
+    expect(p?.during.lowPerHour).toBe(30);
+    expect(p?.during.highPerHour).toBe(60);
+  });
+
+  it("fluid: 70 kg, 1.5 L/h, 3 h → allowable 1.4 kg, 1.03–1.5 L/h", () => {
+    const p = plan(180, { sweat: 1.5 });
+    if (p?.fluid.status !== "ok") throw new Error("expected fluid plan");
+    expect(p.fluid.allowableLossKg).toBeCloseTo(1.4, 6);
+    expect(p.fluid.minLitersPerHour).toBeCloseTo(1.0333, 3);
+    expect(p.fluid.maxLitersPerHour).toBeCloseTo(1.5, 6);
+    expect(p.fluid.maxTotalL).toBeCloseTo(4.5, 6);
+  });
+
+  it("fluid minimum never goes below 0", () => {
+    const p = plan(60, { sweat: 0.5 });
+    if (p?.fluid.status !== "ok") throw new Error("expected fluid plan");
+    expect(p.fluid.minLitersPerHour).toBe(0);
+  });
+
+  it("no sweat rate → no fluid number", () => {
+    expect(plan(180)?.fluid).toEqual({ status: "noSweat" });
+  });
+
+  it("sweat rate but no weight → only the upper bound", () => {
+    expect(plan(180, { weightKg: null, sweat: 1.2 })?.fluid).toEqual({ status: "noWeight", maxLitersPerHour: 1.2 });
+  });
+
+  it("invalid durations → null", () => {
+    expect(plan(0)).toBeNull();
+    expect(plan(-30)).toBeNull();
+    expect(plan(24 * 60 + 1)).toBeNull();
+    expect(plan(Number.NaN)).toBeNull();
+    expect(plan(24 * 60)).not.toBeNull();
+  });
+});
+
+describe("race duration from hours + minutes", () => {
+  it("3 h 30 min → 210 min; blank part = 0", () => {
+    expect(raceMinutesFromParts(3, 30)).toEqual({ status: "valid", minutes: 210 });
+    expect(raceMinutesFromParts(2, null)).toEqual({ status: "valid", minutes: 120 });
+    expect(raceMinutesFromParts(null, 45)).toEqual({ status: "valid", minutes: 45 });
+    expect(raceMinutesFromParts(24, null)).toEqual({ status: "valid", minutes: 1440 });
+  });
+  it("both blank → empty", () => {
+    expect(raceMinutesFromParts(null, null)).toEqual({ status: "empty" });
+  });
+  it("out of range → invalid", () => {
+    expect(raceMinutesFromParts(0, 0).status).toBe("invalid");
+    expect(raceMinutesFromParts(25, 0).status).toBe("invalid");
+    expect(raceMinutesFromParts(24, 1).status).toBe("invalid");
+    expect(raceMinutesFromParts(1, 60).status).toBe("invalid");
+    expect(raceMinutesFromParts(-1, 30).status).toBe("invalid");
+    expect(raceMinutesFromParts(1, -5).status).toBe("invalid");
+  });
+});
+
+describe("DIY recipe parts", () => {
+  it("glucose + sucrose 1:1 by mass gives equal ingredient grams", () => {
+    const parts = diyRecipeParts("glucoseSucrose1to1");
+    if (!parts) throw new Error("expected parts");
+    const plan = planRecipe({ parts, carbGrams: 100, concentrationPct: 8 });
+    if (!plan) throw new Error("expected plan");
+    expect(plan.items).toHaveLength(2);
+    expect(plan.items[0].grams).toBeCloseTo(plan.items[1].grams, 6);
+    expect(plan.items[0].carbGrams + plan.items[1].carbGrams).toBeCloseTo(100, 6);
+  });
+  it("single ingredient passes the label value through", () => {
+    expect(diyRecipeParts("sucrose")).toEqual([{ ingredient: "sucrose" }]);
+    expect(diyRecipeParts("hfcs55", 76)).toEqual([{ ingredient: "hfcs55", labelCarbPer100g: 76 }]);
+  });
+  it("custom without label, or an impossible label → null", () => {
+    expect(diyRecipeParts("custom")).toBeNull();
+    expect(diyRecipeParts("sucrose", 0)).toBeNull();
+    expect(diyRecipeParts("sucrose", 120)).toBeNull();
+  });
+});
+
+describe("race carbohydrate midpoint", () => {
+  it("2 h → (60 + 120) / 2 = 90 g", () => {
+    expect(raceCarbMidpoint(raceFuelPlan({ minutes: 120, weightKg: null, sweatLitersPerHour: null }))).toBeCloseTo(90, 6);
+  });
+  it("no during-race carbohydrate or no plan → null", () => {
+    expect(raceCarbMidpoint(raceFuelPlan({ minutes: 60, weightKg: null, sweatLitersPerHour: null }))).toBeNull();
+    expect(raceCarbMidpoint(null)).toBeNull();
   });
 });

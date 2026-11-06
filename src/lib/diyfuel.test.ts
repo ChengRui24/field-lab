@@ -70,6 +70,20 @@ describe("planRecipe", () => {
     expect(plan!.analysis.solventWaterGrams).toBeCloseTo(690, 6);
   });
 
+  it("planning exactly at 8% / 20% does not trip the limit warnings through float noise", () => {
+    const mix = [
+      { ingredient: "dextroseMonohydrate" as const, carbShare: 0.5 },
+      { ingredient: "sucrose" as const, carbShare: 0.5 },
+    ];
+    for (const carbGrams of [37, 70, 200, 263]) {
+      const at8 = planRecipe({ parts: mix, carbGrams, concentrationPct: 8 })!;
+      expect(at8.analysis.warnings).not.toContain("aboveDrinkLimit");
+      const at20 = planRecipe({ parts: mix, carbGrams, concentrationPct: 20 })!;
+      expect(at20.analysis.warnings).not.toContain("concentratedTakeWithWater");
+      expect(at20.analysis.osmolalityUnavailable).toBeNull();
+    }
+  });
+
   it("HFCS label 75 g/100 g (25% water) → syrup grams and reduced water", () => {
     // syrup = 60 / 0.75 = 80 g (20 g of it water); water to add = 750 − 80 = 670 g
     const plan = planRecipe({
