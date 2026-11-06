@@ -7,8 +7,11 @@
     <script>
       (function () {
         try {
-          var t = localStorage.getItem("field-lab-theme");
-          var dark = t === "dark";
+          var t = null;
+          try {
+            t = localStorage.getItem("field-lab-theme");
+          } catch (e) {}
+          var dark = t === "dark" || (t !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
           document.documentElement.dataset.theme = dark ? "dark" : "light";
           document.documentElement.style.colorScheme = dark ? "dark" : "light";
         } catch (e) {}
@@ -38,15 +41,16 @@
         <span class="wordmark-zh">训练测算</span>
       </a>
       <nav class="site-nav">
+        <a href="./index.html">首页</a>
         <a href="./hr.html">心率</a>
         <a href="./threshold.html">阈值</a>
         <a href="./vo2.html">VO₂max</a>
         <a href="./nodevice.html">无设备</a>
+        <a href="./durability.html">脱耦联</a>
         <a href="./function.html">功能</a>
         <a href="./strength.html">力量</a>
         <a href="./critical.html">临界</a>
-        <a href="./fuel.html">供能</a>
-        <a href="./durability.html">脱耦联</a>
+        <a href="./fuel.html" aria-current="page">供能</a>
         <a href="./load.html">训练负荷</a>
       </nav>
     </header>
@@ -56,77 +60,6 @@
       <p class="lead">
         按体重给出咖啡因、蛋白、肌酸和碳水区间，用体重差估算出汗率，再按预计时长排出比赛日补给和自制补给配方。依据 ISSN（International Society of Sports Nutrition）立场，以及 ACSM（American College of Sports Medicine）/ AND（Academy of Nutrition and Dietetics）/ DC（Dietitians of Canada）2016 运动营养共识。这不是医疗处方。
       </p>
-      <table class="method-table">
-        <thead>
-          <tr>
-            <th>项目</th>
-            <th>常用范围</th>
-            <th>出处</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>咖啡因</td>
-            <td>3–6 mg/kg，运动前约 60 分钟（30–90 分钟）</td>
-            <td>ISSN 咖啡因立场（Guest 2021，<cite>JISSN</cite>）；耐力、力量与功率均有证据</td>
-          </tr>
-          <tr>
-            <td>蛋白</td>
-            <td>耐力约 1.2–1.6 g/kg；增肌约 1.6–2.2 g/kg</td>
-            <td>ISSN / 阻力训练荟萃</td>
-          </tr>
-          <tr>
-            <td>肌酸</td>
-            <td>负荷 0.3 g/kg/日 × 5–7 天，维持 3–5 g/日</td>
-            <td>ISSN：高强度与瘦体重最有效的补剂之一</td>
-          </tr>
-          <tr>
-            <td>运动中碳水</td>
-            <td>1–2.5 h：30–60 g/h；超过约 2.5 h：60–90 g/h（多种糖）</td>
-            <td>ACSM/AND/DC 2016（Thomas）；Jeukendrup 2014</td>
-          </tr>
-          <tr>
-            <td>出汗率</td>
-            <td>(赛前体重 − 赛后体重 + 摄入 − 尿量) / 时间</td>
-            <td>ACSM 运动补液立场（Sawka 2007）；Baker 2017：现场体重差法</td>
-          </tr>
-          <tr>
-            <td>赛前碳水</td>
-            <td>运动超过 60 分钟：赛前 1–4 小时吃 1–4 g/kg；超过 90 分钟的比赛可在赛前 36–48 小时按 10–12 g/kg/日充碳</td>
-            <td>ACSM/AND/DC 2016（Thomas）表 2</td>
-          </tr>
-          <tr>
-            <td>赛中碳水</td>
-            <td>不足 45 分钟：不需要；45–75 分钟：少量或含漱；1–2.5 h：30–60 g/h；超过 2.5–3 h：最高约 90 g/h</td>
-            <td>ACSM/AND/DC 2016（Thomas）表 2；Jeukendrup 2014</td>
-          </tr>
-          <tr>
-            <td>赛中饮水</td>
-            <td>下限：出汗率 − 体重 2% ÷ 时长；上限：出汗率（不喝到体重增加）</td>
-            <td>ACSM 2007（Sawka）：避免失水超过体重 2%，也不喝超过出汗量</td>
-          </tr>
-          <tr>
-            <td>自制糖水</td>
-            <td>当饮料喝 6–8% 碳水，兼顾补液时不超过 8%；自制胶 50% 起只是 DIY 起点，无文献推荐值</td>
-            <td>ACSM 2007；Jeukendrup 2014</td>
-          </tr>
-          <tr>
-            <td>糖的种类</td>
-            <td>蔗糖拆成葡萄糖+果糖，作果糖来源与游离果糖相当；果葡糖浆按干物质与果糖比例计</td>
-            <td>Trommelen 2017（<cite>Nutrients</cite>）；GB/T 20882.4-2021</td>
-          </tr>
-          <tr>
-            <td>汗钠</td>
-            <td>全身汗钠约 10–70 mmol/L，运动员均值约 36 mmol/L；流失 = 出汗率 × 汗钠</td>
-            <td>Baker 2016（<cite>J Sports Sci</cite>）；Baker 2017（<cite>Sports Med</cite>）</td>
-          </tr>
-          <tr>
-            <td>饮料加盐</td>
-            <td>钠 20–30 mmol/L（约 460–690 mg/L）</td>
-            <td>ACSM 2007 引 IOM</td>
-          </tr>
-        </tbody>
-      </table>
       <div class="workbench">
         <form class="panel stack" id="fuel-form" autocomplete="off">
           <div class="block">
@@ -139,7 +72,7 @@
             </ol>
             <div class="field">
               <label for="fu-kg">体重（kg）</label>
-              <input id="fu-kg" type="number" inputmode="decimal" data-persist="weight" min="30" max="200" step="0.1" placeholder="例如 70" />
+              <input id="fu-kg" type="number" inputmode="decimal" data-persist="weight" min="20" max="250" step="0.1" placeholder="例如 70" />
             </div>
             <div class="field">
               <label for="fu-session">运动中碳水 · 预计时长</label>
@@ -148,6 +81,7 @@
                 <option value="endurance" selected>约 1–2.5 小时</option>
                 <option value="ultra">超过约 2.5 小时</option>
               </select>
+              <span class="hint" id="fu-session-hint" hidden></span>
             </div>
             <div class="field">
               <label for="fu-day">日常碳水 · 训练量</label>
@@ -169,11 +103,11 @@
             </ol>
             <div class="field">
               <label for="sw-pre">运动前体重（kg）</label>
-              <input id="sw-pre" type="number" inputmode="decimal" min="30" max="200" step="0.1" />
+              <input id="sw-pre" type="number" inputmode="decimal" min="20" max="250" step="0.1" />
             </div>
             <div class="field">
               <label for="sw-post">运动后体重（kg）</label>
-              <input id="sw-post" type="number" inputmode="decimal" min="30" max="200" step="0.1" />
+              <input id="sw-post" type="number" inputmode="decimal" min="20" max="250" step="0.1" />
             </div>
             <div class="field">
               <label for="sw-fluid">运动中喝了多少（L）</label>
@@ -181,7 +115,7 @@
             </div>
             <div class="field">
               <label for="sw-urine">运动中尿量（L，可选）</label>
-              <input id="sw-urine" type="number" inputmode="decimal" min="0" max="3" step="0.05" placeholder="0" />
+              <input id="sw-urine" type="number" inputmode="decimal" min="0" max="5" step="0.05" placeholder="0" />
             </div>
             <div class="field">
               <label for="sw-min">运动时间（分钟）</label>
@@ -221,7 +155,7 @@
           </div>
           <div class="block">
             <h2>自制补给</h2>
-            <p class="protocol">用家里的糖和盐配糖水、自制胶和盐丸。总碳水默认取上面比赛日补给的中点，其余都可以不填。</p>
+            <p class="protocol">用家里的糖和盐配糖水、自制胶和盐丸。当饮料喝时，总碳水默认取上面比赛日补给的中点；做自制胶（浓度超过 20%）时，按「做几支 × 每支碳水」算。其余都可以不填。</p>
             <ol class="steps">
               <li>选手头的糖。用糖浆或其他原料时，按配料表填每 100 g 含多少碳水。</li>
               <li>选浓度：当饮料喝选 6% 或 8%；自制胶从 50% 起试。</li>
@@ -245,11 +179,6 @@
               <span class="hint">选「其他」时必填；混合预设不用此项。</span>
             </div>
             <div class="field">
-              <label for="dy-carb">总碳水（g，可选）</label>
-              <input id="dy-carb" type="number" inputmode="decimal" min="1" max="2000" step="any" />
-              <span class="hint" id="dy-carb-hint">留空时取比赛日补给全程碳水的中点。</span>
-            </div>
-            <div class="field">
               <label for="dy-conc">浓度（碳水占总质量）</label>
               <select id="dy-conc">
                 <option value="6">运动饮料 6%</option>
@@ -262,9 +191,20 @@
               <label for="dy-conc-custom">自定义浓度（%）</label>
               <input id="dy-conc-custom" type="number" inputmode="decimal" min="1" max="100" step="any" />
             </div>
+            <div class="field" id="dy-carb-wrap">
+              <label for="dy-carb">总碳水（g，可选）</label>
+              <input id="dy-carb" type="number" inputmode="decimal" min="1" max="2000" step="any" />
+              <span class="hint" id="dy-carb-hint">留空时取比赛日补给全程碳水的中点。</span>
+            </div>
             <div class="field">
-              <label for="dy-servings">分几份（可选）</label>
-              <input id="dy-servings" type="number" inputmode="numeric" min="1" max="100" step="1" />
+              <label for="dy-servings" id="dy-servings-label">分几份（可选）</label>
+              <input id="dy-servings" type="number" inputmode="numeric" min="1" max="50" step="1" />
+              <span class="hint" id="dy-servings-hint" hidden></span>
+            </div>
+            <div class="field" id="dy-gel-wrap" hidden>
+              <label for="dy-gel-carb">每支碳水（g，可选）</label>
+              <input id="dy-gel-carb" type="number" inputmode="decimal" min="5" max="100" step="any" placeholder="25" />
+              <span class="hint" id="dy-gel-hint">留空按比赛日补给的每支能量胶克数，没有就按 25 g。</span>
             </div>
             <div class="field">
               <label for="sa-salt">盐</label>
@@ -282,13 +222,13 @@
             </div>
             <div class="field">
               <label for="sa-cap10">10 粒胶囊净盐重（g，可选）</label>
-              <input id="sa-cap10" type="number" inputmode="decimal" min="0.1" max="50" step="any" />
+              <input id="sa-cap10" type="number" inputmode="decimal" min="0.5" max="30" step="any" />
               <span class="hint">称 10 粒装好的，减去 10 粒空壳。</span>
             </div>
             <div class="field">
               <label for="sa-sweatna">汗钠浓度（mmol/L，可选）</label>
               <input id="sa-sweatna" type="number" inputmode="decimal" min="5" max="150" step="any" />
-              <span class="hint">做过汗液检测才填；不填用文献范围。</span>
+              <span class="hint">做过汗液检测才填；不填用文献范围和平均值。</span>
             </div>
             <div class="field">
               <label for="sa-replace">补回流失钠的比例</label>
@@ -308,6 +248,80 @@
           <div id="fuel-output" hidden></div>
         </div>
       </div>
+      <details class="method-details">
+        <summary>方法与精度</summary>
+        <table class="method-table">
+          <thead>
+            <tr>
+              <th>项目</th>
+              <th>常用范围</th>
+              <th>出处</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="white-space: nowrap">咖啡因</td>
+              <td>3–6 mg/kg，运动前约 60 分钟（30–90 分钟）</td>
+              <td>ISSN 咖啡因立场（Guest 2021，<cite>JISSN</cite>）；耐力、力量与功率均有证据</td>
+            </tr>
+            <tr>
+              <td style="white-space: nowrap">蛋白</td>
+              <td>耐力约 1.2–1.6 g/kg；增肌约 1.6–2.2 g/kg</td>
+              <td>ISSN / 阻力训练荟萃</td>
+            </tr>
+            <tr>
+              <td style="white-space: nowrap">肌酸</td>
+              <td>负荷 0.3 g/kg/日 × 5–7 天，维持 3–5 g/日</td>
+              <td>ISSN：高强度与瘦体重最有效的补剂之一</td>
+            </tr>
+            <tr>
+              <td style="white-space: nowrap">运动中碳水</td>
+              <td>1–2.5 h：30–60 g/h；超过约 2.5 h：60–90 g/h（多种糖）</td>
+              <td>ACSM/AND/DC 2016（Thomas）；Jeukendrup 2014</td>
+            </tr>
+            <tr>
+              <td style="white-space: nowrap">出汗率</td>
+              <td>(赛前体重 − 赛后体重 + 摄入 − 尿量) / 时间</td>
+              <td>ACSM 运动补液立场（Sawka 2007）；Baker 2017：现场体重差法</td>
+            </tr>
+            <tr>
+              <td style="white-space: nowrap">赛前碳水</td>
+              <td>运动超过 60 分钟：赛前 1–4 小时吃 1–4 g/kg；超过 90 分钟的比赛可在赛前 36–48 小时按 10–12 g/kg/日充碳</td>
+              <td>ACSM/AND/DC 2016（Thomas）表 2</td>
+            </tr>
+            <tr>
+              <td style="white-space: nowrap">赛中碳水</td>
+              <td>不足 45 分钟：不需要；45–75 分钟：少量或含漱；1–2.5 h：30–60 g/h；超过 2.5–3 h：最高约 90 g/h</td>
+              <td>ACSM/AND/DC 2016（Thomas）表 2；Jeukendrup 2014</td>
+            </tr>
+            <tr>
+              <td style="white-space: nowrap">赛中饮水</td>
+              <td>下限：出汗率 − 体重 2% ÷ 时长；上限（不要超过）：出汗率，不喝到体重增加</td>
+              <td>ACSM 2007（Sawka）：避免失水超过体重 2%，也不喝超过出汗量</td>
+            </tr>
+            <tr>
+              <td style="white-space: nowrap">自制糖水</td>
+              <td>当饮料喝 6–8% 碳水，兼顾补液时不超过 8%；自制胶 50% 起只是 DIY 起点，无文献推荐值</td>
+              <td>ACSM 2007；Jeukendrup 2014</td>
+            </tr>
+            <tr>
+              <td style="white-space: nowrap">糖的种类</td>
+              <td>蔗糖拆成葡萄糖+果糖，作果糖来源与游离果糖相当；果葡糖浆按干物质与果糖比例计</td>
+              <td>Trommelen 2017（<cite>Nutrients</cite>）；GB/T 20882.4-2021</td>
+            </tr>
+            <tr>
+              <td style="white-space: nowrap">汗钠</td>
+              <td>全身汗钠约 10–70 mmol/L，运动员均值约 36 mmol/L；流失 = 出汗率 × 汗钠</td>
+              <td>Baker 2016（<cite>J Sports Sci</cite>）；Baker 2017（<cite>Sports Med</cite>）</td>
+            </tr>
+            <tr>
+              <td style="white-space: nowrap">饮料加盐</td>
+              <td>钠 20–30 mmol/L（约 460–690 mg/L）</td>
+              <td>ACSM 2007 引 IOM</td>
+            </tr>
+          </tbody>
+        </table>
+      </details>
       <section class="notes">
         <h2>注意事项</h2>
         <ol>

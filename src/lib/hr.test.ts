@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  defaultHrFormula,
   foxHrMax,
+  KARVONEN_ZONES,
   gulatiHrMax,
   gulatiRangeNote,
   hrrToHrMaxFraction,
@@ -28,11 +30,34 @@ describe("HRmax formulas", () => {
     expect(foxHrMax(40)).toBe(180);
   });
 
-  it("selects measured, then Gulati for women, else Tanaka", () => {
-    expect(selectedHrMax({ age: 40, sex: "male", measured: 190 })?.value).toBe(190);
+  it("selects measured, then Gulati for women ≥35, else Tanaka", () => {
+    expect(selectedHrMax({ age: 40, sex: "male", measured: 190 })).toEqual({ value: 190, method: "measured" });
     expect(selectedHrMax({ age: 40, sex: "female", measured: null })?.value).toBeCloseTo(170.8, 6);
     expect(selectedHrMax({ age: 40, sex: null, measured: null })?.value).toBeCloseTo(180, 6);
     expect(selectedHrMax({ age: null, sex: null, measured: null })).toBeNull();
+  });
+
+  it("a 32-year-old woman defaults to Tanaka (Gulati cohort was women 35–93)", () => {
+    expect(defaultHrFormula("female", 32)).toBe("tanaka");
+    expect(defaultHrFormula("female", 35)).toBe("gulati");
+    expect(defaultHrFormula("male", 50)).toBe("tanaka");
+    expect(defaultHrFormula(null, 50)).toBe("tanaka");
+    expect(defaultHrFormula("female", null)).toBe("tanaka");
+    const chosen = selectedHrMax({ age: 32, sex: "female", measured: null });
+    expect(chosen?.method).toBe("tanaka");
+    expect(chosen?.value).toBeCloseTo(185.6, 6);
+  });
+
+  it("an explicit formula overrides the default, but measured still wins", () => {
+    expect(selectedHrMax({ age: 32, sex: "female", measured: null, formula: "gulati" })?.method).toBe("gulati");
+    expect(selectedHrMax({ age: 40, sex: "female", measured: null, formula: "tanaka" })?.method).toBe("tanaka");
+    expect(selectedHrMax({ age: 40, sex: "male", measured: 188, formula: "gulati" })?.method).toBe("measured");
+  });
+});
+
+describe("zone text", () => {
+  it("does not claim LT1/LT2 boundaries (LT bands are estimated separately)", () => {
+    for (const zone of KARVONEN_ZONES) expect(zone.physiology).not.toMatch(/LT/);
   });
 });
 

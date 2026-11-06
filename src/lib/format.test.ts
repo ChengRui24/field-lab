@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   canonicalizeTimeInput,
+  describeTimeCanonical,
   formatBpm,
   formatBpmRange,
   formatGrams,
@@ -196,5 +197,61 @@ describe("parseNumber", () => {
 
   it.each(["0x1e", "1e3", "Infinity", "NaN", "1,2,3", "1.2,3", "1,000", "12 3", "abc", "5kg"])("rejects %j", (raw) => {
     expect(parseNumber(raw)).toBeNull();
+  });
+});
+
+describe("duration hm option", () => {
+  const hm = { hm: true };
+
+  it("default behaviour is unchanged", () => {
+    expect(interpretTimeInput("1:52", "duration")).toEqual({ status: "valid", value: 112 / 60, canonical: "1:52" });
+    expect(canonicalizeTimeInput("152", "duration")).toBe("1:52");
+    expect(parseDurationToMinutes("1:52")).toBeCloseTo(112 / 60, 9);
+  });
+
+  it.each([
+    ["1:52", "1:52:00", 112],
+    ["0:45", "0:45:00", 45],
+    ["152", "1:52:00", 112],
+    ["352", "3:52:00", 232],
+    ["1052", "10:52:00", 652],
+    ["1:52:30", "1:52:30", 112.5],
+    ["15230", "1:52:30", 112.5],
+    ["95", "1:35:00", 95],
+    ["52分", "0:52:00", 52],
+    ["90分", "1:30:00", 90],
+    ["4'30\"", "0:04:30", 4.5],
+    ["1小时52分", "1:52:00", 112],
+  ])("%j → %s", (raw, canonical, minutes) => {
+    const result = interpretTimeInput(raw, "duration", hm);
+    expect(result.status).toBe("valid");
+    expect(result.canonical).toBe(canonical);
+    expect(result.value).toBeCloseTo(minutes, 9);
+    expect(canonicalizeTimeInput(raw, "duration", hm)).toBe(canonical);
+    expect(parseDurationToMinutes(raw, hm)).toBeCloseTo(minutes, 9);
+  });
+
+  it("canonical output reads back identically in hm mode", () => {
+    for (const raw of ["1:52", "0:45", "152", "52分"]) {
+      const canonical = canonicalizeTimeInput(raw, "duration", hm);
+      expect(canonicalizeTimeInput(canonical, "duration", hm)).toBe(canonical);
+    }
+  });
+
+  it.each(["1:5", "1:60", "1:52.5", "25:00", "2500"])("rejects %j", (raw) => {
+    expect(interpretTimeInput(raw, "duration", hm).status).toBe("invalid");
+  });
+
+  it("does not affect pace", () => {
+    expect(interpretTimeInput("431", "pace", hm).canonical).toBe("4:31");
+  });
+});
+
+describe("describeTimeCanonical", () => {
+  it("spells out pace and duration", () => {
+    expect(describeTimeCanonical("4:30", "pace")).toBe("4 分 30 秒/km");
+    expect(describeTimeCanonical("1:52:00", "duration")).toBe("1 小时 52 分 00 秒");
+    expect(describeTimeCanonical("45:00", "duration")).toBe("45 分 00 秒");
+    expect(describeTimeCanonical("1:23.45", "duration")).toBe("1 分 23.45 秒");
   });
 });

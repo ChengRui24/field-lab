@@ -7,8 +7,11 @@
     <script>
       (function () {
         try {
-          var t = localStorage.getItem("field-lab-theme");
-          var dark = t === "dark";
+          var t = null;
+          try {
+            t = localStorage.getItem("field-lab-theme");
+          } catch (e) {}
+          var dark = t === "dark" || (t !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
           document.documentElement.dataset.theme = dark ? "dark" : "light";
           document.documentElement.style.colorScheme = dark ? "dark" : "light";
         } catch (e) {}
@@ -38,15 +41,16 @@
         <span class="wordmark-zh">训练测算</span>
       </a>
       <nav class="site-nav">
+        <a href="./index.html">首页</a>
         <a href="./hr.html">心率</a>
         <a href="./threshold.html">阈值</a>
         <a href="./vo2.html">VO₂max</a>
         <a href="./nodevice.html">无设备</a>
-        <a href="./function.html">功能</a>
+        <a href="./durability.html">脱耦联</a>
+        <a href="./function.html" aria-current="page">功能</a>
         <a href="./strength.html">力量</a>
         <a href="./critical.html">临界</a>
         <a href="./fuel.html">供能</a>
-        <a href="./durability.html">脱耦联</a>
         <a href="./load.html">训练负荷</a>
       </nav>
     </header>
@@ -54,136 +58,53 @@
       <p class="kicker">Physical function</p>
       <h1>步行与基础功能</h1>
       <p class="lead">
-        给老年人、低体能或临床功能评估用的现场测试。看的是步行、起坐、平衡转换和握力，不是 VO₂max，也不是训练分区。切点来自 AWGS 2019（Asian Working Group for Sarcopenia）、EWGSOP2（European Working Group on Sarcopenia in Older People 2）和 CDC STEADI（Stopping Elderly Accidents, Deaths & Injuries），只作筛查对照，不能替代医学诊断。
+        在家给老人做的几项简单测试：站立平衡、走 4 米、从椅子上连续起坐 5 次，三项合起来就是 SPPB（简易体能测试，满分 12 分）；另有握力、起立–行走和 6 分钟步行。结果只和亚洲（AWGS 2019）等筛查参考线比较，是筛查，不是诊断。
       </p>
-      <table class="method-table">
-        <thead>
-          <tr>
-            <th>测试</th>
-            <th>看什么</th>
-            <th>常用切点</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>6 分钟步行</td>
-            <td>步行耐力 / 功能距离</td>
-            <td>与 Enright 1998 预测距离比较（40–80 岁验证）；正常下限 = 预测 − 153 m（男）/ − 139 m（女）。不是最大摄氧量</td>
-          </tr>
-          <tr>
-            <td>常速步行</td>
-            <td>日常步速</td>
-            <td>AWGS 2019：6 m 常速 &lt;1.0 m/s；EWGSOP2：≤0.8 m/s</td>
-          </tr>
-          <tr>
-            <td>5 次起坐</td>
-            <td>下肢力量与功率</td>
-            <td>AWGS 2019：≥12 秒；EWGSOP2：&gt;15 秒</td>
-          </tr>
-          <tr>
-            <td>起立–行走 TUG（Timed Up and Go）</td>
-            <td>起立、转向、再坐下</td>
-            <td>CDC STEADI：社区老年人 ≥12 秒作跌倒筛查注意</td>
-          </tr>
-          <tr>
-            <td>SPPB 简易体能</td>
-            <td>平衡 + 4 m 常速 + 5 次起坐，0–12 分</td>
-            <td>Guralnik 1994：0–3 / 4–6 / 7–9 / 10–12 分；EWGSOP2：≤8 分为体能表现低下</td>
-          </tr>
-          <tr>
-            <td>握力</td>
-            <td>上肢肌力</td>
-            <td>AWGS 2019：男 &lt;28 kg、女 &lt;18 kg；EWGSOP2：男 &lt;27 kg、女 &lt;16 kg。确诊肌少症还需要肌量</td>
-          </tr>
-        </tbody>
-      </table>
       <div class="workbench">
         <form class="panel stack" id="fn-form" autocomplete="off">
-          <div class="block">
-            <h2>6 分钟步行</h2>
-            <p class="protocol">ATS（American Thoracic Society）常用的步行功能测试。尽量走远，允许放慢或站住，但不能跑。</p>
-            <ol class="steps">
-              <li>在平坦走廊来回走，两端做标记（常用 30 m）。穿平时的鞋。</li>
-              <li>计时 6 分钟，鼓励继续走，但不要催成跑步。记下总距离。</li>
-              <li>填身高、体重、年龄、性别，用来和 Enright 预测距离比较。方程只在 40–80 岁验证，超出范围只显示实测距离。</li>
-            </ol>
+          <div class="block" role="group" aria-labelledby="info-title">
+            <h2 id="info-title">基本信息</h2>
+            <p class="protocol">所有测试共用。握力按性别对照；6 分钟步行要用年龄、身高、体重、性别算预测距离。</p>
             <div class="field">
-              <label for="mwt-m">6 分钟距离（米）</label>
-              <input id="mwt-m" type="number" inputmode="decimal" min="50" max="1000" step="1" placeholder="例如 500" />
-            </div>
-            <div class="field">
-              <label for="mwt-age">年龄（岁）</label>
+              <label for="info-age">年龄（岁）</label>
               <input
-                id="mwt-age"
+                id="info-age"
                 type="number"
                 inputmode="numeric"
                 min="18"
-                max="100"
+                max="110"
                 step="1"
+                placeholder="例如 72"
                 data-persist="age"
-                data-range-note="Enright 方程只在 40–80 岁人群中验证，超出范围只显示实测距离。"
+                data-range-note="6 分钟步行的 Enright 方程只在 40–80 岁人群中验证，超出范围只显示实测距离。"
                 data-valid-min="40"
                 data-valid-max="80"
               />
             </div>
-            <p class="field-note range-note" id="mwt-age-range-note" hidden></p>
-            <div class="field">
-              <label for="mwt-cm">身高（cm）</label>
-              <input id="mwt-cm" type="number" inputmode="decimal" min="120" max="220" step="0.1" data-persist="height" />
-            </div>
-            <div class="field">
-              <label for="mwt-kg">体重（kg）</label>
-              <input id="mwt-kg" type="number" inputmode="decimal" min="30" max="200" step="0.1" data-persist="weight" />
-            </div>
+            <p class="field-note range-note" id="info-age-range-note" hidden></p>
             <fieldset class="field radio-group">
               <legend>性别</legend>
               <div class="radios">
-                <label><input type="radio" name="mwt-sex" value="male" data-persist="sex" /> 男</label>
-                <label><input type="radio" name="mwt-sex" value="female" data-persist="sex" /> 女</label>
+                <label><input type="radio" name="info-sex" value="male" data-persist="sex" /> 男</label>
+                <label><input type="radio" name="info-sex" value="female" data-persist="sex" /> 女</label>
               </div>
             </fieldset>
-          </div>
-          <div class="block">
-            <h2>常速步行</h2>
-            <p class="protocol">用平时走路的速度，不要比赛。距离默认 4 m（SPPB 用）；按 AWGS 走 6 m 就改距离，但不计入 SPPB。关键是距离和时间都量准。</p>
-            <ol class="steps">
-              <li>标出 4 m（或 6 m）的平路。SPPB 从静止站立起步计时。</li>
-              <li>以「去买菜」那样的平常速度走过去，记下秒数。走两次，填较快的一次。</li>
-            </ol>
             <div class="field">
-              <label for="gait-m">测试距离（米）</label>
-              <input id="gait-m" type="number" inputmode="decimal" min="3" max="20" step="0.1" value="4" placeholder="4" />
+              <label for="info-cm">身高（cm）</label>
+              <input id="info-cm" type="number" inputmode="decimal" min="100" max="220" step="0.1" placeholder="例如 155" data-persist="height" />
             </div>
             <div class="field">
-              <label for="gait-sec">用时（秒）</label>
-              <input id="gait-sec" type="number" inputmode="decimal" min="1" max="40" step="0.1" placeholder="例如 5.5" />
-            </div>
-            <div class="radios">
-              <label><input type="checkbox" id="gait-unable" /> 做不到（SPPB 步行记 0 分）</label>
+              <label for="info-kg">体重（kg）</label>
+              <input id="info-kg" type="number" inputmode="decimal" min="20" max="250" step="0.1" placeholder="例如 60" data-persist="weight" />
             </div>
           </div>
           <div class="block">
-            <h2>5 次起坐</h2>
-            <p class="protocol">从椅子上尽快站起再坐下，共 5 次。看下肢力量，不是有氧。</p>
+            <h2>① 站立平衡（SPPB 第 1 项）</h2>
+            <p class="protocol">依次做三种站姿，每种最多站 10 秒，不扶东西。</p>
             <ol class="steps">
-              <li>椅子约 43–46 cm 高，尽量不扶手。手臂交叉抱在胸前。</li>
-              <li>背部先靠实，计时开始后尽快做 5 次：每次要站直、坐实。</li>
-              <li>第 5 次屁股触椅即停表。</li>
-            </ol>
-            <div class="field">
-              <label for="sts-sec">5 次用时（秒）</label>
-              <input id="sts-sec" type="number" inputmode="decimal" min="4" max="60" step="0.1" placeholder="例如 11.0" />
-            </div>
-            <div class="radios">
-              <label><input type="checkbox" id="sts-unable" /> 做不到 / 超过 60 秒（SPPB 记 0 分）</label>
-            </div>
-          </div>
-          <div class="block">
-            <h2>SPPB 平衡</h2>
-            <p class="protocol">SPPB（Short Physical Performance Battery）= 平衡 + 上面的 4 m 常速 + 5 次起坐，各 0–4 分。三项都有就自动出总分。</p>
-            <ol class="steps">
-              <li>依次做并脚站、半前后脚（一只脚跟靠在另一只脚拇趾旁）、前后脚（一字站，脚跟贴脚尖），每种最多站 10 秒，不扶东西。</li>
-              <li>旁边必须有人贴身保护。某一种没站满 10 秒，后面的就不做，记 0 分。</li>
+              <li><strong>先保证安全：</strong>旁边要有人贴身保护，随时能扶住；站不稳就立刻扶住、停下。</li>
+              <li>并脚站 → 半前后脚（一只脚的脚跟靠在另一只脚的大脚趾旁）→ 前后脚（一字站，脚跟贴脚尖）。</li>
+              <li>某一种没站满 10 秒，后面的就不做，记 0 分。</li>
             </ol>
             <fieldset class="field radio-group">
               <legend>并脚站 10 秒</legend>
@@ -210,44 +131,141 @@
             <p class="field-note" id="bal-skip-note" hidden></p>
           </div>
           <div class="block">
-            <h2>起立–行走 TUG</h2>
-            <p class="protocol">从椅子站起，走到 3 m 处转身回来再坐下。测的是转移和转向，不是跑步能力。</p>
+            <h2>② 4 米常速步行（SPPB 第 2 项）</h2>
+            <p class="protocol">用平时走路的速度，不要比赛。SPPB 用 4 m；按 AWGS 走 6 m 就改距离，但不计入 SPPB。</p>
             <ol class="steps">
-              <li>椅子靠墙更稳。前方 3 m 做标记。</li>
-              <li>听到开始后站起、走到标记、转身、走回、坐下。可用日常助行器，但要注明。</li>
-              <li>记下从起身到坐稳的秒数。</li>
+              <li><strong>先保证安全：</strong>旁边有人陪着走；路面平整、没有地毯边和杂物。</li>
+              <li>标出 4 m（或 6 m）的平路，从静止站立起步计时。</li>
+              <li>以「去买菜」那样的平常速度走过去，记下秒数。走两次，填较快的一次。</li>
             </ol>
             <div class="field">
-              <label for="tug-sec">完成时间（秒）</label>
-              <input id="tug-sec" type="number" inputmode="decimal" min="4" max="60" step="0.1" placeholder="例如 9.5" />
+              <label for="gait-m">测试距离（米）</label>
+              <input id="gait-m" type="number" inputmode="decimal" min="3" max="20" step="0.1" value="4" placeholder="4" />
+            </div>
+            <div class="field">
+              <label for="gait-sec">用时（秒）</label>
+              <input id="gait-sec" type="number" inputmode="decimal" min="1" max="60" step="0.01" placeholder="例如 5.2" />
+            </div>
+            <div class="radios">
+              <label><input type="checkbox" id="gait-unable" /> 做不到（SPPB 步行记 0 分）</label>
+            </div>
+          </div>
+          <div class="block">
+            <h2>③ 5 次起坐（SPPB 第 3 项）</h2>
+            <p class="protocol">从椅子上尽快站起再坐下，共 5 次。看腿部力量，不是有氧。</p>
+            <ol class="steps">
+              <li><strong>先保证安全：</strong>椅子靠墙放稳，旁边有人保护；站不稳就停下。</li>
+              <li>椅子约 43–46 cm 高，尽量不扶手。手臂交叉抱在胸前，背部先靠实。</li>
+              <li>计时开始后尽快做 5 次：每次要站直、坐实。第 5 次坐下屁股触椅即停表。</li>
+            </ol>
+            <div class="field">
+              <label for="sts-sec">5 次用时（秒）</label>
+              <input id="sts-sec" type="number" inputmode="decimal" min="3" max="60" step="0.01" placeholder="例如 14.8" />
+            </div>
+            <div class="radios">
+              <label><input type="checkbox" id="sts-unable" /> 做不到 / 超过 60 秒（SPPB 记 0 分）</label>
             </div>
           </div>
           <div class="block">
             <h2>握力</h2>
-            <p class="protocol">用手持握力计测最大抓握。亚洲筛查优先看 AWGS 2019。</p>
+            <p class="protocol">用手持握力计测最大抓握，看上肢肌力。性别在上面「基本信息」里选。</p>
             <ol class="steps">
-              <li>坐或站均可，肘约 90°，用力握两次，取较好值（公斤）。</li>
-              <li>选对性别。低于切点只说明肌力偏低，不能单凭这项诊断肌少症。</li>
+              <li><strong>先保证安全：</strong>坐稳再测；手或手腕正在疼、近期受伤就先不测。</li>
+              <li>肘约 90°，用力握两次，取较好值（公斤）。</li>
             </ol>
-            <fieldset class="field radio-group">
-              <legend>性别</legend>
-              <div class="radios">
-                <label><input type="radio" name="grip-sex" value="male" data-persist="sex" /> 男</label>
-                <label><input type="radio" name="grip-sex" value="female" data-persist="sex" /> 女</label>
-              </div>
-            </fieldset>
             <div class="field">
               <label for="grip-kg">握力（kg）</label>
-              <input id="grip-kg" type="number" inputmode="decimal" min="5" max="80" step="0.1" placeholder="例如 26" />
+              <input id="grip-kg" type="number" inputmode="decimal" min="1" max="100" step="0.1" placeholder="例如 17" />
+            </div>
+          </div>
+          <div class="block">
+            <h2>起立–行走 TUG</h2>
+            <p class="protocol">TUG（Timed Up and Go）：从椅子站起，走到 3 m 处转身回来再坐下。看起身、转身和走路的稳不稳。</p>
+            <ol class="steps">
+              <li><strong>先保证安全：</strong>全程有人跟在旁边保护；椅子靠墙放稳。</li>
+              <li>前方 3 m 做标记。穿平时的鞋，平时用助行器就照常用。</li>
+              <li>说「开始」时计时：站起、用平常速度走到标记、转身、走回、坐下，坐稳即停表。</li>
+            </ol>
+            <div class="field">
+              <label for="tug-sec">完成时间（秒）</label>
+              <input id="tug-sec" type="number" inputmode="decimal" min="3" max="120" step="0.01" placeholder="例如 9.5" />
+            </div>
+          </div>
+          <div class="block">
+            <h2>6 分钟步行</h2>
+            <p class="protocol">ATS（American Thoracic Society，美国胸科学会）的步行耐力测试。6 分钟内尽量走远，可以放慢、停下靠墙休息，但不能跑。</p>
+            <ol class="steps">
+              <li>
+                <strong>先保证安全：</strong>旁边要有人陪；出现胸痛、难以忍受的气促、腿抽筋、走路踉跄、大汗、面色苍白或发灰，立刻停下，坐下或躺下。上个月内有不稳定心绞痛或心肌梗死，不要做这项。
+              </li>
+              <li>在平坦走廊来回走，两端做标记（常用 30 m）。穿平时的鞋。</li>
+              <li>计时 6 分钟，每分钟只说一句「做得很好，还剩 X 分钟」，不要催成跑步。记下总距离。</li>
+            </ol>
+            <div class="field">
+              <label for="mwt-m">6 分钟距离（米）</label>
+              <input id="mwt-m" type="number" inputmode="decimal" min="10" max="1000" step="1" placeholder="例如 380" />
             </div>
           </div>
         </form>
         <div class="panel results" id="fn-results" aria-live="polite">
           <h2>结果</h2>
-          <p class="result-empty" id="fn-empty">完成任一项测试后显示结果。结果是功能筛查，不是实验室诊断。</p>
+          <p class="result-empty" id="fn-empty">完成任一项测试后显示结果。结果是功能筛查，不是诊断。</p>
           <div id="fn-output" hidden></div>
+          <div class="block" id="fn-urgent">
+            <p class="result-kicker">遇到这些情况先就医</p>
+            <p class="result-method">
+              测试中出现胸痛、难以忍受的气促、腿抽筋、走路踉跄、大汗、面色苍白或发灰：立刻停止，坐下或躺下休息；症状不缓解就去医院。上个月内有不稳定心绞痛或心肌梗死的人不要做 6 分钟步行。（ATS 2002 停止标准与禁忌证）
+            </p>
+          </div>
         </div>
       </div>
+      <details class="method-details">
+        <summary>方法与精度</summary>
+        <table class="method-table">
+          <thead>
+            <tr>
+              <th>测试</th>
+              <th>看什么</th>
+              <th>常用切点</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>SPPB 简易体能</td>
+              <td>平衡 + 4 m 常速 + 5 次起坐，各 0–4 分，共 0–12 分</td>
+              <td>Guralnik 1994：0–3 / 4–6 / 7–9 / 10–12 分；AWGS 2019：≤9 分为体能表现低；EWGSOP2：≤8 分</td>
+            </tr>
+            <tr>
+              <td>常速步行</td>
+              <td>日常步速</td>
+              <td>AWGS 2019：6 m 常速 &lt;1.0 m/s；EWGSOP2：≤0.8 m/s</td>
+            </tr>
+            <tr>
+              <td>5 次起坐</td>
+              <td>下肢力量与功率</td>
+              <td>AWGS 2019：≥12 秒；EWGSOP2：&gt;15 秒</td>
+            </tr>
+            <tr>
+              <td>握力</td>
+              <td>上肢肌力</td>
+              <td>AWGS 2019：男 &lt;28 kg、女 &lt;18 kg；EWGSOP2：男 &lt;27 kg、女 &lt;16 kg。确诊肌少症还需要肌量</td>
+            </tr>
+            <tr>
+              <td>起立–行走 TUG</td>
+              <td>起立、转向、再坐下</td>
+              <td>CDC STEADI：老年人完成 TUG ≥12 秒提示有跌倒风险</td>
+            </tr>
+            <tr>
+              <td>6 分钟步行</td>
+              <td>步行耐力 / 功能距离</td>
+              <td>与 Enright 1998 预测距离比较（40–80 岁验证）；正常下限 = 预测 − 153 m（男）/ − 139 m（女）。不是最大摄氧量</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="field-note">
+          「可能肌少症」：AWGS 2019（Chen 等，JAMDA 2020）在基层和社区使用，只要肌力低（握力）或体能表现低（步速、SPPB、5 次起坐）任一项即可，不需要测肌肉量；确诊肌少症还要 DXA 或生物电阻抗测肌量。缩写：AWGS = Asian Working Group for Sarcopenia；EWGSOP2 = European Working Group on Sarcopenia in Older People 2；CDC STEADI = Stopping Elderly Accidents, Deaths &amp; Injuries。
+        </p>
+      </details>
       <section class="notes">
         <h2>注意事项</h2>
         <ol>
@@ -256,16 +274,16 @@
             6 分钟步行在 ACSM（American College of Sports Medicine）里是功能评估。本页不把它换算成最大摄氧量。要估 VO₂max，请用「VO₂max」页里能完成的跑步、步行或功率车测试。
           </li>
           <li>
-            <span class="note-label">切点怎么读</span>
-            亚洲社区筛查优先 AWGS 2019；欧洲文献常用 EWGSOP2。两者不完全相同。超过切点只表示「这一项偏低」，不是疾病名称。
+            <span class="note-label">参考线怎么读</span>
+            亚洲社区筛查优先 AWGS 2019；欧洲文献常用 EWGSOP2。两者不完全相同。低于参考线只表示「这一项偏弱」，不是疾病名称。
           </li>
           <li>
             <span class="note-label">肌少症</span>
-            AWGS / EWGSOP2 确诊还需要肌量（DXA，dual-energy X-ray absorptiometry；或生物电阻抗）。握力或起坐单独阳性，最多叫「可能肌少症」筛查，需要临床评估。
+            AWGS / EWGSOP2 确诊还需要肌量（DXA，dual-energy X-ray absorptiometry；或生物电阻抗）。握力或起坐单独偏低，最多叫「可能肌少症」，需要临床评估。
           </li>
           <li>
             <span class="note-label">安全</span>
-            不稳定、刚跌倒、严重胸痛或气促时不要做这些测试。TUG 和起坐旁边要有人保护。
+            站不稳、刚跌倒受伤、正有胸痛或明显气促时不要做这些测试。平衡、起坐和 TUG 旁边都要有人保护。
           </li>
         </ol>
       </section>

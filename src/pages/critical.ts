@@ -6,7 +6,6 @@ import {
   formatPace,
   formatWatts,
   parseDurationToMinutes,
-  parseNumber,
 } from "../lib/format";
 import {
   analyzeCriticalTrials,
@@ -23,7 +22,7 @@ import {
 
 function trial(timeId: string, outputId: string): Trial | null {
   const time = parseDurationToMinutes(inputValue(timeId));
-  const output = parseNumber(inputValue(outputId));
+  const output = readNumber(outputId);
   if (time === null || output === null) return null;
   return { timeMinutes: time, output };
 }
@@ -203,7 +202,7 @@ function render(): void {
   const intervals = intervalBlock();
   if (intervals !== null) parts.push(intervals);
 
-  const ftp20 = parseNumber(inputValue("ftp-20"));
+  const ftp20 = readNumber("ftp-20");
   if (ftp20 !== null) {
     const ftp = ftpFrom20min(ftp20);
     parts.push(`
@@ -215,8 +214,8 @@ function render(): void {
     `);
   }
 
-  const d1 = parseNumber(inputValue("cs-d1"));
-  const d2 = parseNumber(inputValue("cs-d2"));
+  const d1 = readNumber("cs-d1");
+  const d2 = readNumber("cs-d2");
   const t1 = parseDurationToMinutes(inputValue("cs-t1"));
   const t2 = parseDurationToMinutes(inputValue("cs-t2"));
   if (d1 !== null && d2 !== null && t1 !== null && t2 !== null) {

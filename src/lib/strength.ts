@@ -44,6 +44,47 @@ export function estimate1rm({ weight, reps, rir }: Strength1rmInput): Strength1r
   return { ok: true, effectiveReps, epley, brzycki, value: (epley + brzycki) / 2, method: "Epley 与 Brzycki 均值" };
 }
 
+export const PLATE_STEP_KG = 2.5;
+
+export function roundToPlate(kg: number, step = PLATE_STEP_KG): number {
+  return Math.round(kg / step) * step;
+}
+
+/** Inverse of epley1rm: the weight that `reps` to failure would correspond to. */
+export function epleyWeight(oneRm: number, reps: number): number {
+  if (reps <= 1) return oneRm;
+  return oneRm / (1 + reps / 30);
+}
+
+/** Inverse of brzycki1rm. */
+export function brzyckiWeight(oneRm: number, reps: number): number {
+  if (reps >= 37) return Number.NaN;
+  if (reps <= 1) return oneRm;
+  return (oneRm * (37 - reps)) / 36;
+}
+
+export const MAX_PLAN_REPS = 12;
+
+export type StrengthPlanResult =
+  | { ok: true; repsToFailure: number; epley: number; brzycki: number; value: number; rounded: number }
+  | { ok: false; reason: string };
+
+/** Planned set of `reps` leaving `rir` in reserve: invert both equations at reps + RIR and average. */
+export function planWeight(oneRm: number, reps: number, rir: number): StrengthPlanResult {
+  if (!Number.isFinite(oneRm) || oneRm <= 0) return { ok: false, reason: "1RM 需大于 0。" };
+  if (!Number.isInteger(reps) || reps < 1 || reps > MAX_PLAN_REPS) {
+    return { ok: false, reason: `计划次数需为 1–${MAX_PLAN_REPS} 的整数。` };
+  }
+  if (!Number.isInteger(rir) || rir < 0 || rir > MAX_RIR) {
+    return { ok: false, reason: `计划 RIR 需为 0–${MAX_RIR} 的整数。` };
+  }
+  const repsToFailure = reps + rir;
+  const epley = epleyWeight(oneRm, repsToFailure);
+  const brzycki = brzyckiWeight(oneRm, repsToFailure);
+  const value = (epley + brzycki) / 2;
+  return { ok: true, repsToFailure, epley, brzycki, value, rounded: roundToPlate(value) };
+}
+
 export type StrengthGoal = {
   id: string;
   name: string;

@@ -64,8 +64,8 @@ describe("day validation", () => {
   });
 
   it("half-filled rows name what is missing", () => {
-    expect(readDay(3, 6, null)).toMatchObject({ status: "error", message: "第 3 天还差分钟" });
-    expect(readDay(4, null, 45)).toMatchObject({ status: "error", message: "第 4 天还差 RPE" });
+    expect(readDay(3, 6, null)).toMatchObject({ status: "error", message: "周三还差分钟" });
+    expect(readDay(4, null, 45)).toMatchObject({ status: "error", message: "周四还差 RPE" });
   });
 
   it("out-of-range values are rejected", () => {

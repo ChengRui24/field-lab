@@ -2,6 +2,43 @@ import { predicted6mwd } from "./acsm";
 
 export type Sex = "male" | "female";
 
+/**
+ * Plausible input ranges; function.html min/max must match (checked in function.test.ts).
+ * Values outside these produce no reading rather than a misleading "normal".
+ */
+export const FUNCTION_LIMITS = {
+  age: { min: 18, max: 110 },
+  heightCm: { min: 100, max: 220 },
+  weightKg: { min: 20, max: 250 },
+  mwtM: { min: 10, max: 1000 },
+  gaitM: { min: 3, max: 20 },
+  gaitSec: { min: 1, max: 60 },
+  chairSec: { min: 3, max: 60 },
+  tugSec: { min: 3, max: 120 },
+  gripKg: { min: 1, max: 100 },
+} as const;
+
+export type FunctionLimitKey = keyof typeof FUNCTION_LIMITS;
+
+export function withinLimits(key: FunctionLimitKey, value: number | null): value is number {
+  if (value === null || !Number.isFinite(value)) return false;
+  const { min, max } = FUNCTION_LIMITS[key];
+  return value >= min && value <= max;
+}
+
+export type Tone = "ok" | "caution";
+
+export type Reading = {
+  /** Lay comparison with the reference line, e.g. 低于亚洲女性参考线 18 kg（偏弱）. */
+  headline: string;
+  note: string;
+  tone: Tone;
+  /** Badge text: 正常 / 偏低 / 需留意. */
+  flag: string;
+  /** Below the AWGS 2019 line for this item (counts toward "possible sarcopenia"). */
+  awgsLow: boolean;
+};
+
 /** Enright & Sherrill 1998: derived in healthy adults aged 40–80 y. */
 export const ENRIGHT_AGE_MIN = 40;
 export const ENRIGHT_AGE_MAX = 80;
@@ -12,16 +49,25 @@ export function enrightLlnOffset(sex: Sex): number {
 }
 
 export type SixMinuteWalkResult =
-  | { inRange: true; predicted: number; lln: number; pctPredicted: number }
+  | { inRange: true; predicted: number; lln: number; pctPredicted: number; belowLln: boolean }
   | { inRange: false; reason: string };
 
+/** Null when any input is outside FUNCTION_LIMITS. */
 export function sixMinuteWalkReading(args: {
   distanceM: number;
   sex: Sex;
   heightCm: number;
   age: number;
   weightKg: number;
-}): SixMinuteWalkResult {
+}): SixMinuteWalkResult | null {
+  if (
+    !withinLimits("mwtM", args.distanceM) ||
+    !withinLimits("age", args.age) ||
+    !withinLimits("heightCm", args.heightCm) ||
+    !withinLimits("weightKg", args.weightKg)
+  ) {
+    return null;
+  }
   if (args.age < ENRIGHT_AGE_MIN || args.age > ENRIGHT_AGE_MAX) {
     return { inRange: false, reason: `年龄超出 Enright 方程的验证范围（${ENRIGHT_AGE_MIN}–${ENRIGHT_AGE_MAX} 岁）` };
   }
@@ -34,67 +80,107 @@ export function sixMinuteWalkReading(args: {
   if (!Number.isFinite(predicted) || predicted <= 0) {
     return { inRange: false, reason: "身高、体重组合使预测值 ≤ 0" };
   }
+  const lln = predicted - enrightLlnOffset(args.sex);
   return {
     inRange: true,
     predicted,
-    lln: predicted - enrightLlnOffset(args.sex),
+    lln,
     pctPredicted: (args.distanceM / predicted) * 100,
+    belowLln: args.distanceM < lln,
   };
 }
 
 export function gaitSpeedMPerSec(distanceM: number, timeSec: number): number | null {
-  if (distanceM <= 0 || timeSec <= 0) return null;
+  if (!withinLimits("gaitM", distanceM) || !withinLimits("gaitSec", timeSec)) return null;
   return distanceM / timeSec;
 }
 
-export function gaitSpeedReading(speed: number): { headline: string; note: string } {
-  if (speed <= 0.8) {
-    return {
-      headline: "≤ 0.8 m/s",
-      note: "EWGSOP2 把 ≤0.8 m/s 作为低步行速度。AWGS 2019 的 6 m 常速切点是 <1.0 m/s。这是筛查，不是肌少症诊断。",
-    };
-  }
+/** AWGS 2019: usual gait speed < 1.0 m/s (6 m); EWGSOP2: ≤ 0.8 m/s. */
+export function gaitSpeedReading(speed: number): Reading {
   if (speed < 1) {
+    const ewg = speed <= 0.8 ? "也达到欧洲 EWGSOP2 的 ≤0.8 m/s 慢步速线。" : "还没到欧洲 EWGSOP2 的 0.8 m/s 线。";
     return {
-      headline: "0.8–1.0 m/s",
-      note: "未到欧洲 0.8 m/s 切点，但低于 AWGS 2019 的 1.0 m/s。社区筛查里常作为「体能偏低」注意。",
+      headline: "低于亚洲参考线 1.0 m/s（偏慢）",
+      note: `AWGS 2019 把常速 <1.0 m/s 算作体能表现低；${ewg}AWGS 原文用 6 m 测，4 m 结果只作近似对照。`,
+      tone: "caution",
+      flag: "偏低",
+      awgsLow: true,
     };
   }
   return {
-    headline: "≥ 1.0 m/s",
-    note: "常速达到 AWGS 2019 常用的 1.0 m/s 线。单次只作参考，前后对比更有用。",
+    headline: "达到参考线 1.0 m/s（正常范围）",
+    note: "单次只作参考，隔段时间用同样方法复测、前后对比更有用。",
+    tone: "ok",
+    flag: "正常",
+    awgsLow: false,
   };
 }
 
-export function chairStandReading(seconds: number): { headline: string; note: string } {
-  if (seconds > 15) {
-    return {
-      headline: "> 15 秒",
-      note: "同时超过 AWGS 2019（≥12 秒）和 EWGSOP2（>15 秒）的 5 次起坐切点。反映下肢力量/功率偏低，不是诊断。",
-    };
-  }
+/** AWGS 2019: 5-time chair stand ≥ 12 s; EWGSOP2: > 15 s. Null outside FUNCTION_LIMITS. */
+export function chairStandReading(seconds: number): Reading | null {
+  if (!withinLimits("chairSec", seconds)) return null;
   if (seconds >= 12) {
+    const ewg = seconds > 15 ? "也超过欧洲 EWGSOP2 的 15 秒线。" : "还没到欧洲 EWGSOP2 的 >15 秒线。";
     return {
-      headline: "12–15 秒（含 15）",
-      note: "达到 AWGS 2019 低体能表现切点（≥12 秒），尚未到 EWGSOP2 的 >15 秒。亚洲人群筛查更常看 12 秒。",
+      headline: "慢于亚洲参考线 12 秒（偏慢）",
+      note: `AWGS 2019 把 5 次起坐 ≥12 秒算作体能表现低，反映腿部力量偏弱；${ewg}`,
+      tone: "caution",
+      flag: "偏低",
+      awgsLow: true,
     };
   }
   return {
-    headline: "< 12 秒",
-    note: "未到 AWGS 2019 的 5 次起坐切点。动作必须站直、坐实，手臂交叉在胸前。",
+    headline: "快于亚洲参考线 12 秒（正常范围）",
+    note: "前提是每次都站直、坐实，手臂交叉在胸前。",
+    tone: "ok",
+    flag: "正常",
+    awgsLow: false,
   };
 }
 
-export function tugReading(seconds: number): { headline: string; note: string } {
+/** CDC STEADI: "An older adult who takes ≥12 seconds to complete the TUG is at risk for falling." */
+export function tugReading(seconds: number): Reading | null {
+  if (!withinLimits("tugSec", seconds)) return null;
   if (seconds >= 12) {
     return {
-      headline: "≥ 12 秒",
-      note: "CDC STEADI 把社区老年人 ≥12 秒当作跌倒风险筛查注意线，不是医学诊断。受椅高、是否用手、场地影响。",
+      headline: "慢于 CDC STEADI 参考线 12 秒（跌倒风险需留意）",
+      note: "CDC STEADI：完成 TUG 需要 ≥12 秒的老年人有跌倒风险。这是筛查提示，不是诊断；椅高、是否扶手、场地都会影响。",
+      tone: "caution",
+      flag: "需留意",
+      awgsLow: false,
     };
   }
   return {
-    headline: "< 12 秒",
-    note: "未到 CDC STEADI 常用的 12 秒筛查线。仍应结合步态、力量和跌倒史看。",
+    headline: "快于 CDC STEADI 参考线 12 秒（正常范围）",
+    note: "仍要结合走路是否不稳、过去一年是否跌倒过来看。",
+    tone: "ok",
+    flag: "正常",
+    awgsLow: false,
+  };
+}
+
+/** AWGS 2019 grip: men < 28 kg, women < 18 kg; EWGSOP2: < 27 / < 16 kg. Null outside FUNCTION_LIMITS. */
+export function gripReading(kg: number, sex: Sex): Reading | null {
+  if (!withinLimits("gripKg", kg)) return null;
+  const who = sex === "male" ? "男性" : "女性";
+  const awgs = sex === "male" ? 28 : 18;
+  const ewg = sex === "male" ? 27 : 16;
+  if (kg < awgs) {
+    const ewgNote = kg < ewg ? `也低于欧洲 EWGSOP2 的 ${ewg} kg 线。` : `还没低于欧洲 EWGSOP2 的 ${ewg} kg 线。`;
+    return {
+      headline: `低于亚洲${who}参考线 ${awgs} kg（偏弱）`,
+      note: `AWGS 2019 把${who}握力 <${awgs} kg 算作肌力低；${ewgNote}单凭握力不能诊断肌少症，还需要测肌肉量。`,
+      tone: "caution",
+      flag: "偏低",
+      awgsLow: true,
+    };
+  }
+  return {
+    headline: `在亚洲${who}参考线 ${awgs} kg 以上（正常范围）`,
+    note: "前提是用校准过的握力计，取两次中较好的一次。",
+    tone: "ok",
+    flag: "正常",
+    awgsLow: false,
   };
 }
 
@@ -149,6 +235,7 @@ export function sppbChairScore(seconds: number): number {
 
 export const SPPB_GAIT_M = 4;
 export const SPPB_EWGSOP2_LOW_MAX = 8;
+export const SPPB_AWGS_LOW_MAX = 9;
 
 export type SppbComponent = "balance" | "gait" | "chair";
 
@@ -178,6 +265,8 @@ export type SppbResult = {
   band: SppbBand | null;
   /** EWGSOP2 (Cruz-Jentoft 2019): SPPB ≤ 8 = poor physical performance. */
   ewgsop2Low: boolean | null;
+  /** AWGS 2019 (Chen 2020): SPPB ≤ 9 = low physical performance. */
+  awgsLow: boolean | null;
 };
 
 export function sppbResult(args: {
@@ -195,7 +284,7 @@ export function sppbResult(args: {
   let gait: number | null = null;
   let gaitWrongDistance = false;
   if (args.gaitUnable) gait = 0;
-  else if (args.gaitSec !== null && args.gaitSec > 0) {
+  else if (withinLimits("gaitSec", args.gaitSec)) {
     if (args.gaitDistanceM !== null && Math.abs(args.gaitDistanceM - SPPB_GAIT_M) < 1e-9) {
       gait = sppbGaitScore(args.gaitSec);
     } else {
@@ -205,7 +294,7 @@ export function sppbResult(args: {
 
   let chair: number | null = null;
   if (args.chairUnable) chair = 0;
-  else if (args.chairSec !== null && args.chairSec > 0) chair = sppbChairScore(args.chairSec);
+  else if (withinLimits("chairSec", args.chairSec)) chair = sppbChairScore(args.chairSec);
 
   const missing: SppbComponent[] = [];
   if (balance === null) missing.push("balance");
@@ -213,7 +302,7 @@ export function sppbResult(args: {
   if (chair === null) missing.push("chair");
 
   if (balance === null || gait === null || chair === null) {
-    return { balance, gait, chair, gaitWrongDistance, missing, total: null, band: null, ewgsop2Low: null };
+    return { balance, gait, chair, gaitWrongDistance, missing, total: null, band: null, ewgsop2Low: null, awgsLow: null };
   }
   const total = balance + gait + chair;
   return {
@@ -225,30 +314,54 @@ export function sppbResult(args: {
     total,
     band: sppbBand(total),
     ewgsop2Low: total <= SPPB_EWGSOP2_LOW_MAX,
+    awgsLow: total <= SPPB_AWGS_LOW_MAX,
   };
 }
 
-export function gripReading(kg: number, sex: Sex): { headline: string; note: string } {
-  const awgs = sex === "male" ? 28 : 18;
-  const ewg = sex === "male" ? 27 : 16;
-  if (kg < ewg) {
-    return {
-      headline: `低于 ${ewg} kg`,
-      note: `同时低于 AWGS 2019（${sex === "male" ? "男 <28" : "女 <18"} kg）和 EWGSOP2（${
-        sex === "male" ? "男 <27" : "女 <16"
-      } kg）。这是肌力筛查切点；确诊肌少症还需要肌量。`,
-    };
-  }
-  if (kg < awgs) {
-    return {
-      headline: `${ewg}–${awgs} kg`,
-      note: `达到 AWGS 2019 切点（${sex === "male" ? "男 <28" : "女 <18"} kg），尚未到 EWGSOP2（${
-        sex === "male" ? "男 <27" : "女 <16"
-      } kg）。亚洲筛查优先看 AWGS。`,
-    };
-  }
+/** Each item: true = below its screening line, false = within, null = not tested / invalid. */
+export type ScreeningFlags = {
+  gait: boolean | null;
+  chair: boolean | null;
+  sppb: boolean | null;
+  grip: boolean | null;
+  tug: boolean | null;
+  mwt: boolean | null;
+};
+
+export const SCREENING_LABEL: Record<keyof ScreeningFlags, string> = {
+  gait: "步速",
+  chair: "起坐",
+  sppb: "SPPB",
+  grip: "握力",
+  tug: "起立–行走",
+  mwt: "6 分钟步行",
+};
+
+const AWGS_ITEMS = ["gait", "chair", "sppb", "grip"] as const;
+
+export type ScreeningSummary = {
+  tested: number;
+  /** Labels of AWGS 2019 items below the line, in page order. */
+  awgsLow: string[];
+  /**
+   * AWGS 2019 "possible sarcopenia": low muscle strength (grip) or low physical performance
+   * (gait < 1.0 m/s, SPPB ≤ 9, or 5-time chair stand ≥ 12 s) — muscle mass not required.
+   */
+  possibleSarcopenia: boolean;
+  /** CDC STEADI: TUG ≥ 12 s. */
+  fallRisk: boolean;
+  /** Below Enright 1998 lower limit of normal. */
+  mwtLow: boolean;
+};
+
+export function screeningSummary(flags: ScreeningFlags): ScreeningSummary {
+  const tested = Object.values(flags).filter((v) => v !== null).length;
+  const awgsLow = AWGS_ITEMS.filter((k) => flags[k] === true).map((k) => SCREENING_LABEL[k]);
   return {
-    headline: `≥ ${awgs} kg`,
-    note: `未到 AWGS 2019 握力切点。用校准握力计，取两次较好值。`,
+    tested,
+    awgsLow,
+    possibleSarcopenia: awgsLow.length > 0,
+    fallRisk: flags.tug === true,
+    mwtLow: flags.mwt === true,
   };
 }

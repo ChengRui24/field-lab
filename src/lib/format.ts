@@ -1,5 +1,14 @@
 export type TimeInputKind = "pace" | "duration";
 
+export interface TimeInputOptions {
+  /**
+   * Duration only: read a two-part entry as hours:minutes (1:52 → 1 h 52 min) and
+   * 3–4 compact digits as h mm (152 → 1:52:00). Canonical output always keeps hours
+   * so it reads back the same either way.
+   */
+  hm?: boolean;
+}
+
 export const MAX_PACE_SEC_PER_KM = 30 * 60;
 export const MAX_DURATION_MINUTES = 24 * 60;
 
@@ -84,9 +93,17 @@ export function normalizeTimeText(raw: string): string {
  * 3+ digits always end in two seconds digits, grouped from the right:
  * 431 → 4:31, 4500 → 45:00, 13600 → 1:36:00. Pace accepts 3–4 digits, duration 3–6.
  * Seconds (or minutes in h:mm:ss) ≥ 60 are rejected later by the parser, never re-guessed.
+ * With `hm` (duration), 3–4 digits are h mm instead: 152 → 1:52:00, 1052 → 10:52:00.
  */
-export function expandCompactTimeDigits(raw: string, kind: TimeInputKind): string {
+export function expandCompactTimeDigits(
+  raw: string,
+  kind: TimeInputKind,
+  options: TimeInputOptions = {},
+): string {
   if (!/^\d+$/.test(raw)) return raw;
+  if (kind === "duration" && options.hm && (raw.length === 3 || raw.length === 4)) {
+    return `${raw.slice(0, -2)}:${raw.slice(-2)}:00`;
+  }
   let maxLen: number;
   switch (kind) {
     case "pace":
@@ -107,8 +124,21 @@ export function expandCompactTimeDigits(raw: string, kind: TimeInputKind): strin
   return `${raw.slice(0, 2)}:${raw.slice(2, 4)}:${raw.slice(4)}`;
 }
 
-export function prepareTimeText(raw: string, kind: TimeInputKind): string {
-  return expandCompactTimeDigits(normalizeTimeText(raw), kind);
+export function prepareTimeText(
+  raw: string,
+  kind: TimeInputKind,
+  options: TimeInputOptions = {},
+): string {
+  if (kind === "duration" && options.hm) {
+    // Unit forms keep their meaning in h:mm mode, so spell out the hours: 52分 → 0:52:00.
+    const unit = rewriteUnitTime(rewriteTimeCharacters(raw).replace(/\s+/g, ""));
+    const parts = unit?.split(":");
+    if (parts?.length === 2) {
+      const minutes = Number(parts[0]);
+      return `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, "0")}:${parts[1]}`;
+    }
+  }
+  return expandCompactTimeDigits(normalizeTimeText(raw), kind, options);
 }
 
 export interface TimeInterpretation {
@@ -119,32 +149,36 @@ export interface TimeInterpretation {
   canonical: string;
 }
 
-function formatClock(totalSec: number, withHours: boolean): string {
+function formatClock(totalSec: number, hours: "never" | "auto" | "always"): string {
   const hundredths = Math.round(totalSec * 100);
   const whole = Math.floor(hundredths / 100);
   const frac = hundredths % 100;
   let secText = String(whole % 60).padStart(2, "0");
   if (frac !== 0) secText += `.${String(frac).padStart(2, "0").replace(/0$/, "")}`;
   const totalMin = Math.floor(whole / 60);
-  if (withHours && totalMin >= 60) {
+  if (hours === "always" || (hours === "auto" && totalMin >= 60)) {
     return `${Math.floor(totalMin / 60)}:${String(totalMin % 60).padStart(2, "0")}:${secText}`;
   }
   return `${totalMin}:${secText}`;
 }
 
-export function interpretTimeInput(raw: string, kind: TimeInputKind): TimeInterpretation {
-  const prepared = prepareTimeText(raw, kind);
+export function interpretTimeInput(
+  raw: string,
+  kind: TimeInputKind,
+  options: TimeInputOptions = {},
+): TimeInterpretation {
+  const prepared = prepareTimeText(raw, kind, options);
   if (prepared === "") return { status: "empty", value: null, canonical: "" };
   let value: number | null;
   let canonical: string;
   switch (kind) {
     case "pace":
       value = parsePaceParts(prepared);
-      canonical = value === null ? "" : formatClock(value, false);
+      canonical = value === null ? "" : formatClock(value, "never");
       break;
     case "duration":
-      value = parseDurationParts(prepared);
-      canonical = value === null ? "" : formatClock(value * 60, true);
+      value = parseDurationParts(prepared, options.hm === true);
+      canonical = value === null ? "" : formatClock(value * 60, options.hm ? "always" : "auto");
       break;
     default: {
       const _never: never = kind;
@@ -155,11 +189,25 @@ export function interpretTimeInput(raw: string, kind: TimeInputKind): TimeInterp
   return { status: "valid", value, canonical };
 }
 
-export function canonicalizeTimeInput(raw: string, kind: TimeInputKind): string {
-  const result = interpretTimeInput(raw, kind);
+export function canonicalizeTimeInput(
+  raw: string,
+  kind: TimeInputKind,
+  options: TimeInputOptions = {},
+): string {
+  const result = interpretTimeInput(raw, kind, options);
   if (result.status === "valid") return result.canonical;
   if (result.status === "empty") return "";
   return normalizeTimeText(raw);
+}
+
+/** Canonical colon form → Chinese reading: 4:30 → 4 分 30 秒/km, 1:52:00 → 1 小时 52 分 00 秒. */
+export function describeTimeCanonical(canonical: string, kind: TimeInputKind): string {
+  const parts = canonical.split(":");
+  let text: string;
+  if (parts.length === 3) text = `${Number(parts[0])} 小时 ${parts[1]} 分 ${parts[2]} 秒`;
+  else if (parts.length === 2) text = `${Number(parts[0])} 分 ${parts[1]} 秒`;
+  else return canonical;
+  return kind === "pace" ? `${text}/km` : text;
 }
 
 const INT_SEGMENT = /^\d+$/;
@@ -186,12 +234,18 @@ function parsePaceParts(text: string): number | null {
   return total;
 }
 
-function parseDurationParts(text: string): number | null {
+function parseDurationParts(text: string, hm = false): number | null {
   const parts = text.split(":");
   let totalSec: number;
   if (parts.length === 1) {
     if (!DECIMAL.test(text)) return null;
     totalSec = Number(text) * 60;
+  } else if (parts.length === 2 && hm) {
+    const [hours, minutes] = parts;
+    if (!INT_SEGMENT.test(hours) || !TWO_DIGIT_SEGMENT.test(minutes)) return null;
+    const min = Number(minutes);
+    if (min >= 60) return null;
+    totalSec = Number(hours) * 3600 + min * 60;
   } else if (parts.length === 2) {
     const [minutes, seconds] = parts;
     if (!INT_SEGMENT.test(minutes) || !SECONDS_SEGMENT.test(seconds)) return null;
@@ -248,8 +302,8 @@ export function parsePaceToSecPerKm(raw: string): number | null {
  * Parse race / test duration (≤ 24 h).
  * `h:mm:ss`, `mm:ss`, compact digits, unit forms, or decimal minutes.
  */
-export function parseDurationToMinutes(raw: string): number | null {
-  return parseDurationParts(prepareTimeText(raw, "duration"));
+export function parseDurationToMinutes(raw: string, options: TimeInputOptions = {}): number | null {
+  return parseDurationParts(prepareTimeText(raw, "duration", options), options.hm === true);
 }
 
 export function formatPace(secPerKm: number): string {

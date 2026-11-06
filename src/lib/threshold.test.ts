@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { lt1PaceFromLt2, paceFromRace, raceToLt2Hr, raceToLt2Pace } from "./threshold";
+import { lt1PaceFromLt2, paceFromRace, raceDistanceFromMeters, raceToLt2Hr, raceToLt2Pace } from "./threshold";
 
 describe("raceToLt2Pace", () => {
   it("marathon 3:00:00 → LT2 4:01–4:06/km, faster than race pace", () => {
@@ -28,6 +28,15 @@ describe("raceToLt2Hr", () => {
   it("marathon average HR is below LT2 HR", () => {
     const hr = raceToLt2Hr("full", 160);
     expect(hr.low).toBeGreaterThan(160);
+  });
+});
+
+describe("raceDistanceFromMeters", () => {
+  it("maps the shared distance select (meters) onto race-back distances", () => {
+    expect(raceDistanceFromMeters(10000)).toBe("10k");
+    expect(raceDistanceFromMeters(21097.5)).toBe("half");
+    expect(raceDistanceFromMeters(42195)).toBe("full");
+    expect(raceDistanceFromMeters(5000)).toBeNull();
   });
 });
 

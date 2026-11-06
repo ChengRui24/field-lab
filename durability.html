@@ -7,8 +7,11 @@
     <script>
       (function () {
         try {
-          var t = localStorage.getItem("field-lab-theme");
-          var dark = t === "dark";
+          var t = null;
+          try {
+            t = localStorage.getItem("field-lab-theme");
+          } catch (e) {}
+          var dark = t === "dark" || (t !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
           document.documentElement.dataset.theme = dark ? "dark" : "light";
           document.documentElement.style.colorScheme = dark ? "dark" : "light";
         } catch (e) {}
@@ -38,15 +41,16 @@
         <span class="wordmark-zh">训练测算</span>
       </a>
       <nav class="site-nav">
+        <a href="./index.html">首页</a>
         <a href="./hr.html">心率</a>
         <a href="./threshold.html">阈值</a>
         <a href="./vo2.html">VO₂max</a>
         <a href="./nodevice.html">无设备</a>
+        <a href="./durability.html" aria-current="page">脱耦联</a>
         <a href="./function.html">功能</a>
         <a href="./strength.html">力量</a>
         <a href="./critical.html">临界</a>
         <a href="./fuel.html">供能</a>
-        <a href="./durability.html">脱耦联</a>
         <a href="./load.html">训练负荷</a>
       </nav>
     </header>
@@ -54,29 +58,8 @@
       <p class="kicker">Durability</p>
       <h1>心率脱耦联</h1>
       <p class="lead">
-        用前半段与后半段的「心率 / 外部做功」比值，估算有氧课的生理漂移。Jones 等将耐久性视为耐力表现的第四维。这是监测，不是实验室耐久性诊断。
+        比较前半段与后半段「每次心跳换来多少速度或功率」（EF），估算有氧课的生理漂移。Jones 等将耐久性视为耐力表现的第四维。这是监测，不是实验室耐久性诊断。
       </p>
-      <table class="method-table">
-        <thead>
-          <tr>
-            <th>指标</th>
-            <th>算法</th>
-            <th>怎么读</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>内部 / 外部比</td>
-            <td>心率 ÷ 速度，或心率 ÷ 功率</td>
-            <td>同一配速心率升高，或同一心率配速下降，比值都会变大</td>
-          </tr>
-          <tr>
-            <td>脱耦联 %（TrainingPeaks / Friel Pa:HR、Pw:HR）</td>
-            <td>EF（efficiency factor）= 速度或功率 ÷ 心率；脱耦联 = (EF前 − EF后) / EF前 × 100</td>
-            <td>正值表示后半更费。训练中常把约 5% 当作「值得注意」，不是硬阈值</td>
-          </tr>
-        </tbody>
-      </table>
       <div class="workbench">
         <form class="panel stack" id="dc-form" autocomplete="off">
           <div class="block">
@@ -102,11 +85,11 @@
             </div>
             <div class="field" id="dc-early-power-wrap" hidden>
               <label for="dc-early-power">平均功率（W）</label>
-              <input id="dc-early-power" type="number" inputmode="numeric" min="50" max="2000" step="1" />
+              <input id="dc-early-power" type="number" inputmode="numeric" min="30" max="800" step="1" />
             </div>
             <div class="field">
               <label for="dc-early-hr">平均心率（bpm）</label>
-              <input id="dc-early-hr" type="number" inputmode="numeric" min="80" max="220" step="1" />
+              <input id="dc-early-hr" type="number" inputmode="numeric" min="60" max="220" step="1" />
             </div>
           </div>
           <div class="block">
@@ -117,11 +100,11 @@
             </div>
             <div class="field" id="dc-late-power-wrap" hidden>
               <label for="dc-late-power">平均功率（W）</label>
-              <input id="dc-late-power" type="number" inputmode="numeric" min="50" max="2000" step="1" />
+              <input id="dc-late-power" type="number" inputmode="numeric" min="30" max="800" step="1" />
             </div>
             <div class="field">
               <label for="dc-late-hr">平均心率（bpm）</label>
-              <input id="dc-late-hr" type="number" inputmode="numeric" min="80" max="220" step="1" />
+              <input id="dc-late-hr" type="number" inputmode="numeric" min="60" max="220" step="1" />
             </div>
           </div>
         </form>
@@ -131,6 +114,30 @@
           <div id="dc-output" hidden></div>
         </div>
       </div>
+      <details class="method-details">
+        <summary>方法与精度</summary>
+        <table class="method-table">
+          <thead>
+            <tr>
+              <th>指标</th>
+              <th>算法</th>
+              <th>怎么读</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>EF（efficiency factor）</td>
+              <td>跑步：速度（m/min）÷ 心率 = 每次心跳跑多少米；骑行：功率 ÷ 心率（W/bpm）</td>
+              <td>同一配速心率升高，或同一心率配速下降，EF 都会变小</td>
+            </tr>
+            <tr>
+              <td>脱耦联 %（TrainingPeaks / Friel Pa:HR、Pw:HR）</td>
+              <td>脱耦联 = (EF前 − EF后) / EF前 × 100</td>
+              <td>正值表示后半更费。训练中常把约 5% 当作「值得注意」，不是硬阈值</td>
+            </tr>
+          </tbody>
+        </table>
+      </details>
       <section class="notes">
         <h2>注意事项</h2>
         <ol>
@@ -140,7 +147,7 @@
           </li>
           <li>
             <span class="note-label">不是诊断</span>
-            2025 年 <cite>Experimental Physiology</cite> 方法学综述：现场脱耦联不等于实验室测到的阈值衰退。热、脱水、坡度、心率漂移都会抬高这个数。
+            2025 年 <cite>Experimental Physiology</cite> 方法学综述：现场脱耦联不等于实验室测到的阈值衰退。热、脱水、坡度都会让脱耦联变大，所以高不一定是体能问题。
           </li>
           <li>
             <span class="note-label">约 5%</span>

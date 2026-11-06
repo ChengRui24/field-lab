@@ -7,8 +7,11 @@
     <script>
       (function () {
         try {
-          var t = localStorage.getItem("field-lab-theme");
-          var dark = t === "dark";
+          var t = null;
+          try {
+            t = localStorage.getItem("field-lab-theme");
+          } catch (e) {}
+          var dark = t === "dark" || (t !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
           document.documentElement.dataset.theme = dark ? "dark" : "light";
           document.documentElement.style.colorScheme = dark ? "dark" : "light";
         } catch (e) {}
@@ -38,15 +41,16 @@
         <span class="wordmark-zh">训练测算</span>
       </a>
       <nav class="site-nav">
+        <a href="./index.html">首页</a>
         <a href="./hr.html">心率</a>
         <a href="./threshold.html">阈值</a>
         <a href="./vo2.html">VO₂max</a>
-        <a href="./nodevice.html">无设备</a>
+        <a href="./nodevice.html" aria-current="page">无设备</a>
+        <a href="./durability.html">脱耦联</a>
         <a href="./function.html">功能</a>
         <a href="./strength.html">力量</a>
         <a href="./critical.html">临界</a>
         <a href="./fuel.html">供能</a>
-        <a href="./durability.html">脱耦联</a>
         <a href="./load.html">训练负荷</a>
       </nav>
     </header>
@@ -57,13 +61,41 @@
         没有手表时，用主观方法校准强度。谈话测试是首选；鼻吸测试帮你守 LT1（lactate threshold 1，第一乳酸阈）；RPE（rating of perceived exertion，自觉劳累）作交叉验证。本页没有输入框——对照着跑即可。
       </p>
 
+      <section class="panel stack" aria-labelledby="nd-card-title">
+        <h2 id="nd-card-title">口令卡</h2>
+        <p class="protocol">给队员的现场口令。跑、骑时让他说一句完整的话（大约 10–15 个字）：</p>
+        <table class="ref-table">
+          <thead>
+            <tr>
+              <th>队员的状态</th>
+              <th>口令</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>能舒服地说完整的句子</td>
+              <td>轻松有氧，保持</td>
+            </tr>
+            <tr>
+              <td>能说，但说得不舒服、要停下来换气</td>
+              <td>轻松课：放慢</td>
+            </tr>
+            <tr>
+              <td>需要张嘴喘，只能说几个词</td>
+              <td>放慢（只有计划好的强度课才到这里）</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="field-note">轻松有氧 = 第一通气阈 / 第一乳酸阈（VT1 / LT1）以下，常用五区心率里的 Z1–Z2。依据见下方谈话测试（Reed &amp; Pipe 2014；Foster 2008）。</p>
+      </section>
+
       <div class="stack">
         <section class="block">
           <h2>谈话测试 Talk Test</h2>
-          <p class="protocol">Reed &amp; Pipe 2014 综述：在运动员、健康成人和心血管病患者中，能舒服说话时多在 VT1（ventilatory threshold，第一通气阈）或乳酸阈以下，不能时多已超过；走、跑、骑、椭圆机、台阶机之间结果一致。明确答「不能」时接近 VT2（Recalde 2002，训练者样本）。ACE（American Council on Exercise，美国运动委员会）2025 年把它作为三区强度模型的无设备方法。这是群体层面的对应，个人误差可能不小，是无设备时的首选，不是精确测定。</p>
+          <p class="protocol">Reed &amp; Pipe 2014 综述：在运动员、健康成人和心血管病患者中，能舒服说话时多在 VT1（ventilatory threshold，第一通气阈）或乳酸阈以下，不能时多已超过；走、跑、骑、椭圆机、台阶机之间结果一致。说话开始不舒服（「说不准」）时大约在 VT1 附近（Foster 2008）；明确答「不能」时接近 VT2（Recalde 2002，训练者样本）。ACE（American Council on Exercise，美国运动委员会）2025 年把它作为三区强度模型的无设备方法。这是群体层面的对应，个人误差可能不小，是无设备时的首选，不是精确测定。</p>
           <ol class="steps">
             <li>跑、骑或爬坡时，试着说一句完整的话（大约 10–15 个字）。游泳不便说话时改用鼻吸或 RPE。</li>
-            <li>对照下表：还能唱歌就太轻松；只能蹦单词就已经过阈。</li>
+            <li>对照下表：能舒服说完整句子，就在轻松有氧范围；说话开始不舒服，已到 VT1 附近；说不出完整句子、只能蹦几个词，已接近或超过 VT2。</li>
           </ol>
           <table class="ref-table">
             <thead>
@@ -74,20 +106,16 @@
             </thead>
             <tbody>
               <tr>
-                <td>能完整说长句子，甚至唱歌</td>
-                <td>&lt; LT1（Z1–Z2）</td>
+                <td>能舒服地说完整句子</td>
+                <td>&lt; VT1 / LT1（Z1–Z2，轻松有氧）</td>
               </tr>
               <tr>
-                <td>能说完整句子，但不想多说</td>
-                <td>≈ LT1</td>
+                <td>能说，但不舒服，说几句要换气</td>
+                <td>≈ VT1 到 VT2 之间</td>
               </tr>
               <tr>
-                <td>只能说 3–5 个词的短句</td>
-                <td>≈ LT2</td>
-              </tr>
-              <tr>
-                <td>只能蹦单个词，喘气为主</td>
-                <td>&gt; LT2</td>
+                <td>说不出完整句子，只能蹦几个词</td>
+                <td>接近或 &gt; VT2 / LT2</td>
               </tr>
             </tbody>
           </table>
@@ -97,7 +125,7 @@
           <h2>鼻吸测试</h2>
           <ol class="steps">
             <li>用鼻子吸、鼻子呼，全程不张嘴。能维持就还在 LT1 以下。</li>
-            <li>一必须张嘴，强度就已经过了 LT1。</li>
+            <li>一旦必须张嘴，强度就已经过了 LT1。</li>
           </ol>
           <table class="ref-table">
             <thead>
@@ -120,44 +148,39 @@
         </section>
 
         <section class="block">
-          <h2>RPE 自觉劳累（10 分制）</h2>
+          <h2>RPE 自觉劳累（CR-10，0–10）</h2>
           <ol class="steps">
-            <li>问自己：这强度有多费？10 分是力竭，4 分是还能轻松说话。</li>
+            <li>问自己：这强度有多费？用和训练负荷页同一张改良 CR-10 量表（Foster 2001）：3 分「中等」，4 分「有点吃力」，5–6 分「吃力」，10 分「极限」。</li>
             <li>新手容易判断不准，请同时用谈话测试对照，不要只凭「感觉还能再快」。</li>
           </ol>
           <table class="ref-table">
             <thead>
               <tr>
                 <th>RPE</th>
-                <th>状态</th>
-                <th>分区</th>
+                <th>感觉（改良 CR-10）</th>
+                <th>ACE 三区</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>1–2</td>
-                <td>躺着 / 散步</td>
-                <td>Z1</td>
+                <td>0–2</td>
+                <td>休息 / 非常非常轻松 / 轻松</td>
+                <td>热身、恢复</td>
               </tr>
               <tr>
                 <td>3–4</td>
-                <td>轻松，能说话</td>
-                <td>Z2</td>
+                <td>中等 / 有点吃力</td>
+                <td>区 1：&lt; VT1，能舒服说话</td>
               </tr>
               <tr>
                 <td>5–6</td>
-                <td>有点喘，短句</td>
-                <td>Z3</td>
+                <td>吃力</td>
+                <td>区 2：VT1–VT2，说话不舒服</td>
               </tr>
               <tr>
-                <td>7–8</td>
-                <td>喘得明显，只能蹦词</td>
-                <td>Z4（LT2 附近）</td>
-              </tr>
-              <tr>
-                <td>9–10</td>
-                <td>极限</td>
-                <td>Z5</td>
+                <td>7–10</td>
+                <td>非常吃力 / 极限</td>
+                <td>区 3：≥ VT2，只能蹦几个词</td>
               </tr>
             </tbody>
           </table>

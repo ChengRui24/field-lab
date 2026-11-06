@@ -5,6 +5,7 @@ import {
   mile15Vo2,
   paceAtVdotPercent,
   predictRaceMinutes,
+  readVdot,
   rockportVo2,
   stepTestVo2,
   vdotFromRace,
@@ -54,14 +55,15 @@ describe("VDOT (Daniels & Gilbert)", () => {
 
   it("predictRaceMinutes inverts vdotFromRace", () => {
     const minutes = predictRaceMinutes(50, 42195);
-    expect(vdotFromRace(42195, minutes)).toBeCloseTo(50, 4);
+    expect(minutes).not.toBeNull();
+    expect(vdotFromRace(42195, minutes!)).toBeCloseTo(50, 4);
   });
 
   it("VDOT 50 training paces match Daniels' table (±3 s/km)", () => {
     const p = vdotTrainingPaces(50);
     expect(Math.abs(p.threshold - sec("4:15"))).toBeLessThanOrEqual(3);
     expect(Math.abs(p.interval - sec("3:55"))).toBeLessThanOrEqual(3);
-    expect(Math.abs(p.marathon - sec("4:31"))).toBeLessThanOrEqual(3);
+    expect(Math.abs(p.marathon! - sec("4:31"))).toBeLessThanOrEqual(3);
     expect(Math.abs(p.easy.fast - sec("4:56"))).toBeLessThanOrEqual(3);
     expect(Math.abs(p.easy.slow - sec("5:34"))).toBeLessThanOrEqual(3);
   });
@@ -79,7 +81,7 @@ describe("VDOT (Daniels & Gilbert)", () => {
     const got = [p.easy.fast, p.easy.slow, p.marathon, p.threshold, p.interval];
     row.forEach((expected, i) => {
       if (expected === null) return;
-      expect(Math.abs(got[i] - sec(expected))).toBeLessThanOrEqual(3);
+      expect(Math.abs(got[i]! - sec(expected))).toBeLessThanOrEqual(3);
     });
   });
 
@@ -119,10 +121,76 @@ describe("VDOT (Daniels & Gilbert)", () => {
   it("regression: paces are sec/km, never minutes", () => {
     for (const vdot of [30, 50, 85]) {
       const p = vdotTrainingPaces(vdot);
-      for (const value of [p.easy.fast, p.easy.slow, p.marathon, p.threshold, p.interval]) {
+      for (const value of [p.easy.fast, p.easy.slow, p.marathon!, p.threshold, p.interval, p.repetition!]) {
         expect(value).toBeGreaterThan(120);
       }
       expect(paceAtVdotPercent(vdot, 0.88)).toBeGreaterThan(120);
+    }
+  });
+});
+
+describe("predictRaceMinutes bracket", () => {
+  it("returns null instead of clamping when the answer is slower than 3 km/h", () => {
+    // 3:58:20 typed against 10 km gives VDOT ≈ 4; the old solver returned the 3 km/h bound.
+    expect(predictRaceMinutes(4, 42195)).toBeNull();
+    expect(predictRaceMinutes(Number.NaN, 42195)).toBeNull();
+  });
+
+  it("returns null when the answer is faster than 60 km/h", () => {
+    expect(predictRaceMinutes(12854, 21097.5)).toBeNull();
+  });
+
+  it("equivalentRaces omits unsolvable distances rather than inventing bound times", () => {
+    expect(equivalentRaces(4)).toEqual([]);
+  });
+});
+
+describe("readVdot (persona: 32-y woman, marathon 3:58:20, half 1:52:00)", () => {
+  it("marathon 3:58:20 ≈ VDOT 38.2", () => {
+    const r = readVdot(42195, 238 + 20 / 60);
+    expect(r.status).toBe("ok");
+    expect(r.vdot!).toBeCloseTo(38.2, 1);
+  });
+
+  it("half 1:52:00 ≈ VDOT 39.5", () => {
+    const r = readVdot(21097.5, 112);
+    expect(r.status).toBe("ok");
+    expect(r.vdot!).toBeCloseTo(39.5, 1);
+  });
+
+  it("half '1:52' read as 1 min 52 s is implausible (was VDOT 12854)", () => {
+    expect(readVdot(21097.5, 1 + 52 / 60).status).toBe("implausible");
+  });
+
+  it("marathon time against 10 km is implausible (VDOT ≈ 4, pace > 12:00/km)", () => {
+    expect(readVdot(10000, 238 + 20 / 60).status).toBe("implausible");
+  });
+
+  it("faster than the world record is implausible", () => {
+    expect(readVdot(42195, 119).status).toBe("implausible");
+    expect(readVdot(5000, 12).status).toBe("implausible");
+  });
+});
+
+// Daniels' Running Formula Table 2, R pace per 400 m (seconds), via coacheseducation.com reprint.
+// R is defined as ≈ current mile race pace; we solve the Daniels–Gilbert mile time directly.
+// Verified rows: within ~1 s/400 m for VDOT 30–50; from ~VDOT 55 up ours runs 1–2 s/400 m faster.
+describe("R (repetition) pace vs Daniels' table", () => {
+  it.each([
+    [30, 136],
+    [40, 106],
+    [50, 87],
+    [55, 81],
+  ])("VDOT %s · R 400 m ≈ %s s", (vdot, table400) => {
+    const r = vdotTrainingPaces(vdot).repetition;
+    expect(r).not.toBeNull();
+    expect(Math.abs(r! * 0.4 - table400)).toBeLessThanOrEqual(1.5);
+  });
+
+  it("R is faster than I", () => {
+    for (const vdot of [30, 50, 70]) {
+      const p = vdotTrainingPaces(vdot);
+      expect(p.repetition!).toBeLessThan(p.interval);
     }
   });
 });

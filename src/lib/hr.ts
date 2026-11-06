@@ -12,19 +12,43 @@ export function gulatiHrMax(age: number): number {
   return 206 - 0.88 * age;
 }
 
+export type HrFormula = "tanaka" | "gulati";
+export type HrFormulaChoice = HrFormula | "auto";
+export type HrMaxMethod = HrFormula | "measured";
+
+/** Gulati 2010 cohort was women aged 35–93, so it is the default only there; everyone else gets Tanaka. */
+export function defaultHrFormula(sex: Sex | null, age: number | null): HrFormula {
+  return sex === "female" && age !== null && age >= 35 ? "gulati" : "tanaka";
+}
+
+export const HRMAX_METHOD_LABEL: Record<HrMaxMethod, string> = {
+  tanaka: "Tanaka",
+  gulati: "Gulati",
+  measured: "现场实测",
+};
+
 export function selectedHrMax(args: {
   age: number | null;
   sex: Sex | null;
   measured: number | null;
-}): { value: number; method: string } | null {
+  formula?: HrFormulaChoice;
+}): { value: number; method: HrMaxMethod } | null {
   if (args.measured !== null) {
-    return { value: args.measured, method: "现场实测" };
+    return { value: args.measured, method: "measured" };
   }
   if (args.age === null) return null;
-  if (args.sex === "female") {
-    return { value: gulatiHrMax(args.age), method: "Gulati（女性）" };
+  const choice = args.formula ?? "auto";
+  const formula = choice === "auto" ? defaultHrFormula(args.sex, args.age) : choice;
+  switch (formula) {
+    case "gulati":
+      return { value: gulatiHrMax(args.age), method: "gulati" };
+    case "tanaka":
+      return { value: tanakaHrMax(args.age), method: "tanaka" };
+    default: {
+      const _never: never = formula;
+      return _never;
+    }
   }
-  return { value: tanakaHrMax(args.age), method: "Tanaka" };
 }
 
 export function heartRateReserve(hrMax: number, resting: number): number {
@@ -35,12 +59,13 @@ export function karvonen(resting: number, hrr: number, intensity: number): numbe
   return resting + hrr * intensity;
 }
 
+/** Zones are %HRR bands; they do not claim LT1/LT2 boundaries (those are estimated separately). */
 export const KARVONEN_ZONES = [
-  { id: "z1", name: "Z1 恢复", low: 0.5, high: 0.6, physiology: "纯有氧，脂肪主导", talk: "能唱歌" },
-  { id: "z2", name: "Z2 有氧", low: 0.6, high: 0.75, physiology: "LT1 附近及以下，脂肪 + 糖混合", talk: "能说完整长句" },
-  { id: "z3", name: "Z3 混氧下", low: 0.75, high: 0.82, physiology: "LT1–LT2 之间，乳酸缓慢上升", talk: "只能说短句" },
-  { id: "z4", name: "Z4 阈值", low: 0.82, high: 0.88, physiology: "LT2 附近，乳酸稳态", talk: "只能说 3–5 个词" },
-  { id: "z5", name: "Z5 无氧", low: 0.88, high: 1, physiology: "LT2 以上，乳酸快速堆积", talk: "只能蹦字" },
+  { id: "z1", name: "Z1 恢复", low: 0.5, high: 0.6, physiology: "恢复、热身、放松", talk: "能唱歌" },
+  { id: "z2", name: "Z2 有氧", low: 0.6, high: 0.75, physiology: "有氧基础，日常轻松跑和长距离", talk: "能说完整句子" },
+  { id: "z3", name: "Z3 中等", low: 0.75, high: 0.82, physiology: "中等强度，稳态跑", talk: "只能说短句" },
+  { id: "z4", name: "Z4 吃力", low: 0.82, high: 0.88, physiology: "接近阈值的吃力强度，节奏跑", talk: "只能说 3–5 个词" },
+  { id: "z5", name: "Z5 很吃力", low: 0.88, high: 1, physiology: "高强度间歇", talk: "只能蹦字" },
 ] as const;
 
 export const HRMAX_ZONES = [

@@ -9,12 +9,19 @@ export function sessionLoad(rpe: number, minutes: number): number {
   return rpe * minutes;
 }
 
+/** Rows are weekdays for display; storage keys stay load-d1..d7 so earlier weeks survive. */
+export const WEEKDAYS = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"] as const;
+
+export function weekdayLabel(day: number): string {
+  return WEEKDAYS[day - 1] ?? `第 ${day} 天`;
+}
+
 export type DayEntry =
   | { status: "empty" }
   | { status: "ok"; rpe: number; minutes: number; load: number }
   | { status: "error"; message: string; rpeInvalid: boolean; minutesInvalid: boolean };
 
-/** Validates one day's pair of inputs; `day` is 1-based for messages. Both blank = rest day. */
+/** Validates one day's pair of inputs; `day` is 1-based (1 = 周一). Both blank = rest day. */
 export function readDay(day: number, rpe: number | null, minutes: number | null): DayEntry {
   if (rpe === null && minutes === null) return { status: "empty" };
   const rpeBad = rpe !== null && (rpe < RPE_MIN || rpe > RPE_MAX);
@@ -25,16 +32,16 @@ export function readDay(day: number, rpe: number | null, minutes: number | null)
     if (minutesBad) parts.push(`分钟应大于 0 且不超过 ${MINUTES_MAX}`);
     return {
       status: "error",
-      message: `第 ${day} 天 ${parts.join("，")}`,
+      message: `${weekdayLabel(day)} ${parts.join("，")}`,
       rpeInvalid: rpeBad,
       minutesInvalid: minutesBad,
     };
   }
   if (minutes === null) {
-    return { status: "error", message: `第 ${day} 天还差分钟`, rpeInvalid: false, minutesInvalid: true };
+    return { status: "error", message: `${weekdayLabel(day)}还差分钟`, rpeInvalid: false, minutesInvalid: true };
   }
   if (rpe === null) {
-    return { status: "error", message: `第 ${day} 天还差 RPE`, rpeInvalid: true, minutesInvalid: false };
+    return { status: "error", message: `${weekdayLabel(day)}还差 RPE`, rpeInvalid: true, minutesInvalid: false };
   }
   return { status: "ok", rpe, minutes, load: sessionLoad(rpe, minutes) };
 }

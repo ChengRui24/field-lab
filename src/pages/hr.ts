@@ -1,13 +1,11 @@
 import "../styles/base.css";
 import { initChrome } from "../chrome";
-import { bindForm, checkedSex, inputValue } from "../lib/dom";
-import {
-  formatBpm,
-  formatBpmRange,
-  parseNumber,
-} from "../lib/format";
+import { bindForm, checkedRadio, checkedSex, readNumber } from "../lib/dom";
+import { formatBpm, formatBpmRange } from "../lib/format";
 import {
   foxHrMax,
+  HRMAX_METHOD_LABEL,
+  type HrFormulaChoice,
   gulatiHrMax,
   gulatiRangeNote,
   HRMAX_ZONES,
@@ -102,16 +100,41 @@ function ltBlock(hrMax: number, resting: number | null): string {
   `;
 }
 
+function readFormula(): HrFormulaChoice {
+  const raw = checkedRadio("formula");
+  return raw === "tanaka" || raw === "gulati" ? raw : "auto";
+}
+
+/** Z2 of the primary method: Karvonen when RHR is known, %HRmax otherwise. */
+function easyBand(hrMax: number, resting: number | null): { low: number; high: number; basis: string } {
+  if (resting !== null) {
+    const z2 = KARVONEN_ZONES.find((zone) => zone.id === "z2")!;
+    const hrr = hrMax - resting;
+    return {
+      low: karvonen(resting, hrr, z2.low),
+      high: karvonen(resting, hrr, z2.high),
+      basis: `Z2 = ${Math.round(z2.low * 100)}–${Math.round(z2.high * 100)}% HRR（Karvonen）`,
+    };
+  }
+  const z2 = HRMAX_ZONES.find((zone) => zone.id === "z2")!;
+  return {
+    low: hrMax * z2.low,
+    high: hrMax * z2.high,
+    basis: `Z2 = ${Math.round(z2.low * 100)}–${Math.round(z2.high * 100)}% HRmax；有运动习惯者通常偏低，补上静息心率更准`,
+  };
+}
+
 function render(): void {
   const empty = document.getElementById("hr-empty");
   const output = document.getElementById("hr-output");
   const detail = document.getElementById("hr-detail");
   if (!empty || !output || !detail) return;
 
-  const age = parseNumber(inputValue("age"));
-  const rhr = parseNumber(inputValue("rhr"));
-  const measured = parseNumber(inputValue("measured"));
+  const age = readNumber("age");
+  const rhr = readNumber("rhr");
+  const measured = readNumber("measured");
   const sex = checkedSex("sex");
+  const formula = readFormula();
 
   if (age === null && measured === null) {
     empty.hidden = false;
@@ -129,40 +152,35 @@ function render(): void {
   const tanaka = age !== null ? tanakaHrMax(age) : null;
   const gulati = age !== null ? gulatiHrMax(age) : null;
   const fox = age !== null ? foxHrMax(age) : null;
-  const chosen = selectedHrMax({ age, sex, measured });
+  const chosen = selectedHrMax({ age, sex, measured, formula });
   if (!chosen) return;
 
   const rhrProblem = rhr !== null ? restingHrProblem(chosen.value, rhr) : null;
-  const gulatiNote = gulatiRangeNote(sex, age);
-  const chosenMethod = chosen.method;
-  const mark = (method: string) => (method === chosenMethod ? ' class="used"' : "");
+  const gulatiNote = chosen.method === "gulati" ? gulatiRangeNote(sex, age) : null;
+  const mark = (method: string) => (method === chosen.method ? ' class="used"' : "");
+  const gulatiComment =
+    sex === "female" ? (age !== null && age < 35 ? "35 岁以下未经验证" : "35 岁及以上女性") : "女性专用";
 
   const hrMaxTable = `
     <p class="result-kicker">最大心率</p>
     <p class="result-value">${formatBpm(chosen.value)}<small>bpm</small></p>
-    <p class="result-method">选用 <strong>${chosen.method}</strong>${
+    <p class="result-method">选用 <strong>${HRMAX_METHOD_LABEL[chosen.method]}</strong>${
       rhr !== null && rhrProblem === null ? ` · HRR ${formatBpm(chosen.value - rhr)} bpm` : ""
     }</p>
     <table class="result-table">
       <thead><tr><th>方法</th><th>HRmax</th><th>说明</th></tr></thead>
       <tbody>
-        ${tanaka !== null ? `<tr${mark("Tanaka")}><td>Tanaka</td><td class="mono">${formatBpm(tanaka)}</td><td>普通人群推荐</td></tr>` : ""}
-        ${
-          gulati !== null
-            ? `<tr${mark("Gulati（女性）")}><td>Gulati</td><td class="mono">${formatBpm(gulati)}</td><td>${
-                sex === "female" ? "女性选用" : "女性专用"
-              }</td></tr>`
-            : ""
-        }
+        ${tanaka !== null ? `<tr${mark("tanaka")}><td>Tanaka</td><td class="mono">${formatBpm(tanaka)}</td><td>普通人群推荐</td></tr>` : ""}
+        ${gulati !== null ? `<tr${mark("gulati")}><td>Gulati</td><td class="mono">${formatBpm(gulati)}</td><td>${gulatiComment}</td></tr>` : ""}
         ${fox !== null ? `<tr><td>Fox</td><td class="mono">${formatBpm(fox)}</td><td>仅对照</td></tr>` : ""}
         ${
           measured !== null
-            ? `<tr${mark("现场实测")}><td>实测</td><td class="mono">${formatBpm(measured)}</td><td>覆盖公式</td></tr>`
+            ? `<tr${mark("measured")}><td>实测</td><td class="mono">${formatBpm(measured)}</td><td>覆盖公式</td></tr>`
             : `<tr><td>实测</td><td class="mono">—</td><td>未填</td></tr>`
         }
       </tbody>
     </table>
-    ${gulatiNote !== null ? `<p class="field-note range-note">${gulatiNote}</p>` : ""}
+    ${gulatiNote !== null ? `<p class="result-method range-note table-after-note">${gulatiNote}</p>` : ""}
   `;
 
   if (rhrProblem !== null) {
@@ -171,26 +189,40 @@ function render(): void {
     return;
   }
 
+  const easy = easyBand(chosen.value, rhr);
+  const easyHeadline = `
+    <p class="result-kicker">日常轻松跑（能说完整句子）</p>
+    <p class="result-value">${formatBpmRange(easy.low, easy.high)}<small>bpm</small></p>
+    <p class="result-method">日常轻松跑：约 ${formatBpmRange(easy.low, easy.high)} bpm。${easy.basis}。</p>
+  `;
+
   const zones = zoneRows(chosen.value, rhr);
+  const zoneCaveat =
+    "分区按心率百分比划分，边界不等于 LT1 / LT2；LT 心率见下方，另算且更粗略。";
   const karvonenTable =
     rhr === null
-      ? `<p class="result-method">未填静息心率。以下为手表常用的 %HRmax 五区，训练者会系统性偏低。补上 RHR 后改用 Karvonen。</p>
+      ? `<p class="result-kicker">五区 · %HRmax</p>
+         <p class="result-method">未填静息心率。以下为手表常用的 %HRmax 五区，训练者会系统性偏低。补上 RHR 后改用 Karvonen。${zoneCaveat}</p>
          <table class="result-table">
            <thead><tr><th>分区</th><th>心率 bpm</th><th>公式</th></tr></thead>
            <tbody>${zones.hrMaxPct}</tbody>
          </table>`
       : `<p class="result-kicker">五区 · Karvonen</p>
+         <p class="result-method">${zoneCaveat}</p>
          <table class="result-table">
-           <thead><tr><th>分区</th><th>心率 bpm</th><th>公式</th><th>生理</th><th>谈话测试</th></tr></thead>
+           <thead><tr><th>分区</th><th>心率 bpm</th><th>公式</th><th>用途</th><th>谈话测试</th></tr></thead>
            <tbody>${zones.karvonen}</tbody>
          </table>
-         <p class="result-method">对照（勿用于训练者）：%HRmax 分区 Z2 通常只有 60–70% HRmax。</p>
-         <table class="result-table">
-           <thead><tr><th>分区</th><th>%HRmax bpm</th><th>公式</th></tr></thead>
-           <tbody>${zones.hrMaxPct}</tbody>
-         </table>`;
+         <details class="method-details">
+           <summary>对照：%HRmax 五区（勿用于训练者）</summary>
+           <p class="result-method">手表默认的 %HRmax 分区 Z2 通常只有 60–70% HRmax，对有运动习惯者偏低。</p>
+           <table class="result-table">
+             <thead><tr><th>分区</th><th>%HRmax bpm</th><th>公式</th></tr></thead>
+             <tbody>${zones.hrMaxPct}</tbody>
+           </table>
+         </details>`;
 
-  output.innerHTML = hrMaxTable;
+  output.innerHTML = easyHeadline + hrMaxTable;
   detail.innerHTML = karvonenTable + ltBlock(chosen.value, rhr);
 }
 

@@ -7,8 +7,11 @@
     <script>
       (function () {
         try {
-          var t = localStorage.getItem("field-lab-theme");
-          var dark = t === "dark";
+          var t = null;
+          try {
+            t = localStorage.getItem("field-lab-theme");
+          } catch (e) {}
+          var dark = t === "dark" || (t !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
           document.documentElement.dataset.theme = dark ? "dark" : "light";
           document.documentElement.style.colorScheme = dark ? "dark" : "light";
         } catch (e) {}
@@ -38,15 +41,16 @@
         <span class="wordmark-zh">训练测算</span>
       </a>
       <nav class="site-nav">
+        <a href="./index.html">首页</a>
         <a href="./hr.html">心率</a>
         <a href="./threshold.html">阈值</a>
-        <a href="./vo2.html">VO₂max</a>
+        <a href="./vo2.html" aria-current="page">VO₂max</a>
         <a href="./nodevice.html">无设备</a>
+        <a href="./durability.html">脱耦联</a>
         <a href="./function.html">功能</a>
         <a href="./strength.html">力量</a>
         <a href="./critical.html">临界</a>
         <a href="./fuel.html">供能</a>
-        <a href="./durability.html">脱耦联</a>
         <a href="./load.html">训练负荷</a>
       </nav>
     </header>
@@ -54,116 +58,99 @@
       <p class="kicker">Aerobic capacity</p>
       <h1>VO₂max</h1>
       <p class="lead">
-        按你能完成的测试选一项即可，估的是 VO₂max（maximal oxygen uptake，最大摄氧量）。有跑步基础用 Cooper；久坐或体重较大用 Rockport 步行；有功率车用 YMCA；球类队伍用 Yo-Yo、20 m 往返跑或 30-15。比赛成绩换训练配速请到「阈值与配速」的 VDOT。老年人步行功能请到「功能」。
+        选一项你能完成的测试，估 VO₂max（maximal oxygen uptake，最大摄氧量）：有跑步基础用 Cooper 或 2.4 km；久坐或体重较大用 Rockport 步行；有功率车用 YMCA；球队用 Yo-Yo、往返跑或 30-15。
       </p>
 
-      <table class="method-table">
-        <thead>
-          <tr>
-            <th>方法</th>
-            <th>公式 / 做法</th>
-            <th>适用</th>
-            <th>不适用</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Cooper 12 分钟跑</td>
-            <td class="formula">VO₂max = (距离 m - 504.9) / 44.73</td>
-            <td>能维持 12 分钟匀速快跑</td>
-            <td>完全久坐、中断或走路；体重过大导致经济性差、公式低估</td>
-          </tr>
-          <tr>
-            <td>1.5 英里（2.41 km）计时跑</td>
-            <td class="formula">VO₂max = 3.5 + 483 / 时间(分钟)</td>
-            <td>有跑步基础者，跑完 1.5 英里（2414 m）</td>
-            <td>同上，跑不下来不要硬测</td>
-          </tr>
-          <tr>
-            <td>Rockport 1.6 km 步行</td>
-            <td>需体重、年龄、性别、走完时间、即刻心率</td>
-            <td>无运动习惯、大 BMI（body mass index，体重指数）、不适合跑 12 分钟者</td>
-            <td>已经能轻松跑步的训练者（专项性不足）</td>
-          </tr>
-          <tr>
-            <td>Queen's College 台阶</td>
-            <td>41.3 cm 台阶 3 分钟，测恢复心率</td>
-            <td>无跑道、无运动习惯者的粗略参考</td>
-            <td>精度约 ±10%，不能当训练标尺</td>
-          </tr>
-          <tr>
-            <td>YMCA 式功率车（Tanaka 变体）</td>
-            <td>热身后骑两档由轻到重的稳定功率，记下每档心率</td>
-            <td>不能跑步、有功率车者</td>
-            <td>必须亚极量；两档心率都要在 110–150 bpm，第二档高于第一档。原版 YMCA 外推到 220 − 年龄，本页改用 Tanaka</td>
-          </tr>
-          <tr>
-            <td>Yo-Yo 间歇恢复测试（IR1 / IR2）</td>
-            <td class="formula">IR1：VO₂max = 距离 m × 0.0084 + 36.4；IR2：× 0.0136 + 45.3</td>
-            <td>球类队伍，追踪总距离的变化</td>
-            <td>想精确知道 VO₂max：与实验室值相关仅 r = 0.70（IR1）/ 0.58（IR2）</td>
-          </tr>
-          <tr>
-            <td>20 m 往返跑（Léger 1988，1 分钟一级）</td>
-            <td class="formula">速度 S = 8 + 0.5 × 级数；VO₂max = 31.025 + 3.238S − 3.248A + 0.1536AS（成人 A 取 18，约 −27.4 + 6.0S）</td>
-            <td>学生、球类与有急停急起的项目；可集体测</td>
-            <td>使用其他音频版本（如 Ramsbottom 1988 起速与级数不同）的成绩</td>
-          </tr>
-          <tr>
-            <td>30-15 间歇体能测试（30-15 IFT）</td>
-            <td class="formula">VO₂max = 28.3 − 2.15G − 0.741A − 0.0357W + 0.0586A·V + 1.03V</td>
-            <td>球类队伍；V<sub>IFT</sub> 直接用来定 15 s/15 s 间歇的跑动距离</td>
-            <td>公式只在约 16 岁青少年手球运动员中验证，成人 VO₂max 仅供参考</td>
-          </tr>
-          <tr>
-            <td>ACSM（American College of Sports Medicine）代谢式</td>
-            <td>走/跑：速度 + 坡度；骑：功率 + 体重</td>
-            <td>已知配速或功率时估当前摄氧量</td>
-            <td>估的是该强度的 VO₂，不是 VO₂max</td>
-          </tr>
-        </tbody>
-      </table>
+      <aside class="block vo2-race">
+        <p class="protocol">
+          <strong>有比赛成绩？用阈值页的 VDOT（≈ 有效 VO₂max）。</strong><a href="./threshold.html">「阈值与配速」的 VDOT</a> 由 5 km 及以上的比赛成绩反推，已含跑步经济性，定训练配速比下面的现场估算更直接；但它不是实验室测出的 VO₂max，两者数值不能直接比较。
+        </p>
+      </aside>
 
-      <div class="workbench">
-        <form class="panel stack" id="vo2-form" autocomplete="off">
-          <div class="block">
+      <nav class="vo2-jump" aria-label="跳到测试">
+        <p>
+          <span class="vo2-jump-label">个人测试</span>
+          <a href="#t-cooper">Cooper</a>
+          <a href="#t-mile">2.4 km</a>
+          <a href="#t-rockport">Rockport</a>
+          <a href="#t-step">台阶</a>
+          <a href="#t-ymca">YMCA</a>
+          <a href="#t-acsm">ACSM</a>
+        </p>
+        <p>
+          <span class="vo2-jump-label">球队测试</span>
+          <a href="#t-yoyo">Yo-Yo</a>
+          <a href="#t-shuttle">往返跑</a>
+          <a href="#t-ift">30-15</a>
+        </p>
+      </nav>
+
+      <form class="stack vo2-bench" id="vo2-form" autocomplete="off">
+        <div class="vo2-profile" id="vo2-profile" hidden>
+          <p class="vo2-profile-text" id="vo2-profile-text"></p>
+          <button type="button" class="form-action" id="vo2-profile-clear">换人：清空个人资料</button>
+        </div>
+
+        <section class="block vo2-test" id="t-cooper">
+          <div class="vo2-test-input">
             <h2>Cooper 12 分钟跑</h2>
             <p class="protocol">这是尽量远的 12 分钟跑，不是轻松慢跑，也不是前半冲、后半走。</p>
-            <ol class="steps">
-              <li>选 400 m 跑道或有可靠距离的平坦路线。先热身 5–10 分钟。</li>
-              <li>计时开始后连续跑 12 分钟，尽量匀速，用你能坚持到底的最快配速。</li>
-              <li>中途可以略降速，但不要走。停表后立刻记下所跑距离（米）。</li>
-              <li>不能连续跑满 12 分钟就不要做这项，改用下面的步行测试。</li>
-            </ol>
+            <details class="vo2-steps">
+              <summary>怎么测</summary>
+              <ol class="steps">
+                <li>选 400 m 跑道或有可靠距离的平坦路线。先热身 5–10 分钟。</li>
+                <li>计时开始后连续跑 12 分钟，尽量匀速，用你能坚持到底的最快配速。</li>
+                <li>中途可以略降速，但不要走。停表后立刻记下所跑距离（米）。</li>
+                <li>不能连续跑满 12 分钟就不要做这项，改用下面的步行测试。</li>
+              </ol>
+            </details>
             <div class="field">
               <label for="cooper-m">12 分钟距离（米）</label>
               <input id="cooper-m" type="number" inputmode="decimal" min="800" max="5000" step="1" placeholder="例如 2800" />
             </div>
           </div>
-          <div class="block">
+          <div class="vo2-result" id="cooper-result" aria-live="polite"></div>
+        </section>
+
+        <section class="block vo2-test" id="t-mile">
+          <div class="vo2-test-input">
             <h2>1.5 英里（2.41 km）计时跑</h2>
             <p class="protocol">公式对应 1.5 英里（2414 m）测试，不能换成其他距离。用最短时间跑完这段距离。</p>
-            <ol class="steps">
-              <li>热身 5–10 分钟。在跑道或标定路线上跑 2.41 km（400 m 跑道约 6 圈加 14 m）。</li>
-              <li>全力但匀速：一开始不要冲刺，按你能坚持完全程的最快配速。</li>
-              <li>记下完跑时间。跑不下来同样不要硬测。</li>
-            </ol>
+            <details class="vo2-steps">
+              <summary>怎么测</summary>
+              <ol class="steps">
+                <li>热身 5–10 分钟。在跑道或标定路线上跑 2.41 km（400 m 跑道约 6 圈加 14 m）。</li>
+                <li>全力但匀速：一开始不要冲刺，按你能坚持完全程的最快配速。</li>
+                <li>记下完跑时间。跑不下来同样不要硬测。</li>
+              </ol>
+            </details>
             <div class="field">
               <label for="mile-time">完成时间（分:秒）</label>
               <input id="mile-time" type="text" inputmode="decimal" data-time="duration" placeholder="12:00、1200 或 12" />
             </div>
           </div>
-          <div class="block">
+          <div class="vo2-result" id="mile-result" aria-live="polite"></div>
+        </section>
+
+        <section class="block vo2-test" id="t-rockport">
+          <div class="vo2-test-input">
             <h2>Rockport 1.6 km 步行</h2>
             <p class="protocol">原测试为 1 英里，按 1.6 km 走即可。只能走、不能跑。</p>
-            <ol class="steps">
-              <li>热身后，在平坦路线尽快走完 1.6 km，步幅大、频率高，但不跑。</li>
-              <li>一走完立刻测心率（手表或 15 秒脉搏 ×4）。</li>
-              <li>记下用时、即刻心率、体重、年龄和性别。体重用公斤，公式内部会换成磅。</li>
-            </ol>
+            <details class="vo2-steps">
+              <summary>怎么测</summary>
+              <ol class="steps">
+                <li>热身后，在平坦路线尽快走完 1.6 km，步幅大、频率高，但不跑。</li>
+                <li>一走完立刻测心率（手表或 15 秒脉搏 ×4）。</li>
+                <li>记下用时、即刻心率、体重、年龄和性别。体重用公斤，公式内部会换成磅。</li>
+              </ol>
+            </details>
             <div class="field">
-              <label for="rp-kg">体重（kg）</label>
-              <input id="rp-kg" type="number" inputmode="decimal" data-persist="weight" min="30" max="200" step="0.1" />
+              <label for="rp-time">1.6 km 用时（分:秒）</label>
+              <input id="rp-time" type="text" inputmode="decimal" data-time="duration" placeholder="15:30 或 1530" />
+            </div>
+            <div class="field">
+              <label for="rp-hr">走完即刻心率（bpm）</label>
+              <input id="rp-hr" type="number" inputmode="numeric" min="60" max="200" step="1" />
             </div>
             <div class="field">
               <label for="rp-age">年龄（岁）</label>
@@ -180,22 +167,29 @@
               </fieldset>
             </div>
             <div class="field">
-              <label for="rp-time">1.6 km 用时（分:秒）</label>
-              <input id="rp-time" type="text" inputmode="decimal" data-time="duration" placeholder="15:30 或 1530" />
-            </div>
-            <div class="field">
-              <label for="rp-hr">走完即刻心率（bpm）</label>
-              <input id="rp-hr" type="number" inputmode="numeric" min="60" max="200" step="1" />
+              <label for="rp-kg">体重（kg）</label>
+              <input id="rp-kg" type="number" inputmode="decimal" data-persist="weight" min="30" max="200" step="0.1" />
             </div>
           </div>
-          <div class="block">
+          <div class="vo2-result" id="rockport-result" aria-live="polite"></div>
+        </section>
+
+        <section class="block vo2-test" id="t-step">
+          <div class="vo2-test-input">
             <h2>Queen's College 台阶测试</h2>
             <p class="protocol">用恢复心率粗估 VO₂max，误差大约 ±10%，只作参考。</p>
-            <ol class="steps">
-              <li>台阶高度 41.3 cm（16.25 英寸）。准备节拍器或带节拍的音乐。</li>
-              <li>上下台阶 3 分钟：男性每分钟 24 次（节拍 96），女性每分钟 22 次（节拍 88）。一次 = 上一只脚、上另一只、下一只、下另一只。</li>
-              <li>3 分钟一到立刻停下站直。等 5 秒，再数 15 秒脉搏，结果 ×4 就是恢复心率。</li>
-            </ol>
+            <details class="vo2-steps">
+              <summary>怎么测</summary>
+              <ol class="steps">
+                <li>台阶高度 41.3 cm（16.25 英寸）。准备节拍器或带节拍的音乐。</li>
+                <li>上下台阶 3 分钟：男性每分钟 24 次（节拍 96），女性每分钟 22 次（节拍 88）。一次 = 上一只脚、上另一只、下一只、下另一只。</li>
+                <li>3 分钟一到立刻停下站直。等 5 秒，再数 15 秒脉搏，结果 ×4 就是恢复心率。</li>
+              </ol>
+            </details>
+            <div class="field">
+              <label for="st-hr">恢复心率（bpm）</label>
+              <input id="st-hr" type="number" inputmode="numeric" min="60" max="200" step="1" />
+            </div>
             <div class="field">
               <fieldset class="radio-group">
                 <legend>性别</legend>
@@ -205,28 +199,23 @@
                 </div>
               </fieldset>
             </div>
-            <div class="field">
-              <label for="st-hr">恢复心率（bpm）</label>
-              <input id="st-hr" type="number" inputmode="numeric" min="60" max="200" step="1" />
-            </div>
           </div>
-          <div class="block">
+          <div class="vo2-result" id="step-result" aria-live="polite"></div>
+        </section>
+
+        <section class="block vo2-test" id="t-ymca">
+          <div class="vo2-test-input">
             <h2>YMCA 式功率车（Tanaka 变体）</h2>
-            <p class="protocol">需要能显示瓦数的室内功率车或骑行台。这不是全力冲，是两档「还能说话」的稳定骑。</p>
-            <ol class="steps">
-              <li>热身 2–3 分钟，轻松蹬，心率先平下来。</li>
-              <li>第一档：选一个轻松但不是散步的功率（常见 50–100 W），匀速骑满约 3 分钟。最后 15–30 秒记下功率和平均心率，填成负荷 1、心率 1。心率要在 110–150 bpm 之间，低于 110 就加功率。</li>
-              <li>第二档：把功率提高一档（常见再加 25–50 W），再稳骑约 3 分钟。心率应明显高于第一档，且不超过 150 bpm，仍能说短句，不要骑到力竭。记下负荷 2、心率 2。</li>
-              <li>页面用这两点连线，外推到 Tanaka 最大心率，估 VO₂max（原版 YMCA 外推到 220 − 年龄，40 岁时两者相同，年龄越大 Tanaka 值越高）。若负荷或心率没有升高，或心率不在 110–150 bpm，结果区会说明原因。</li>
-            </ol>
-            <div class="field">
-              <label for="ym-age">年龄（岁）</label>
-              <input id="ym-age" type="number" inputmode="numeric" min="10" max="90" step="1" data-persist="age" />
-            </div>
-            <div class="field">
-              <label for="ym-kg">体重（kg）</label>
-              <input id="ym-kg" type="number" inputmode="decimal" data-persist="weight" min="30" max="200" step="0.1" />
-            </div>
+            <p class="protocol">需要能显示瓦数的室内功率车或骑行台。这不是全力冲，是两档「还能说话」的稳定骑，两档心率都要在 110–150 bpm。</p>
+            <details class="vo2-steps">
+              <summary>怎么测</summary>
+              <ol class="steps">
+                <li>热身 2–3 分钟，轻松蹬，心率先平下来。</li>
+                <li>第一档：选一个轻松但不是散步的功率（常见 50–100 W），匀速骑满约 3 分钟。最后 15–30 秒记下功率和平均心率，填成负荷 1、心率 1。心率要在 110–150 bpm 之间，低于 110 就加功率。</li>
+                <li>第二档：把功率提高一档（常见再加 25–50 W），再稳骑约 3 分钟。心率应明显高于第一档，且不超过 150 bpm，仍能说短句，不要骑到力竭。记下负荷 2、心率 2。</li>
+                <li>页面用这两点连线，外推到 Tanaka 最大心率，估 VO₂max（原版 YMCA 外推到 220 − 年龄，40 岁时两者相同，年龄越大 Tanaka 值越高）。若负荷或心率没有升高，或心率不在 110–150 bpm，结果区会说明原因。</li>
+              </ol>
+            </details>
             <div class="field">
               <label for="ym-w1">负荷 1（W）</label>
               <input id="ym-w1" type="number" inputmode="numeric" min="25" max="400" step="1" />
@@ -243,15 +232,30 @@
               <label for="ym-hr2">心率 2（bpm）</label>
               <input id="ym-hr2" type="number" inputmode="numeric" min="80" max="200" step="1" />
             </div>
+            <div class="field">
+              <label for="ym-age">年龄（岁）</label>
+              <input id="ym-age" type="number" inputmode="numeric" min="10" max="90" step="1" data-persist="age" />
+            </div>
+            <div class="field">
+              <label for="ym-kg">体重（kg）</label>
+              <input id="ym-kg" type="number" inputmode="decimal" data-persist="weight" min="30" max="200" step="0.1" />
+            </div>
           </div>
-          <div class="block">
+          <div class="vo2-result" id="ymca-result" aria-live="polite"></div>
+        </section>
+
+        <section class="block vo2-test" id="t-yoyo">
+          <div class="vo2-test-input">
             <h2>Yo-Yo 间歇恢复测试</h2>
             <p class="protocol">2 × 20 m 往返，每趟后 10 秒主动恢复，速度随音频递增。成绩是总距离，比换算出的 VO₂max 更适合追踪。</p>
-            <ol class="steps">
-              <li>标出 20 m 跑道，起点线后 5 m 处再标一条恢复线。用官方 IR1 或 IR2 音频。</li>
-              <li>每次信号响起跑 20 m 并返回，然后在 5 m 恢复区慢跑一个来回，等下一声。</li>
-              <li>第二次没能按时回到起点线即结束。记下此时的累计距离（米）。</li>
-            </ol>
+            <details class="vo2-steps">
+              <summary>怎么测</summary>
+              <ol class="steps">
+                <li>标出 20 m 跑道，起点线后 5 m 处再标一条恢复线。用官方 IR1 或 IR2 音频。</li>
+                <li>每次信号响起跑 20 m 并返回，然后在 5 m 恢复区慢跑一个来回，等下一声。</li>
+                <li>第二次没能按时回到起点线即结束。记下此时的累计距离（米）。</li>
+              </ol>
+            </details>
             <div class="field">
               <label for="yy-level">版本</label>
               <select id="yy-level">
@@ -264,14 +268,21 @@
               <input id="yy-m" type="number" inputmode="numeric" min="40" max="4000" step="40" placeholder="例如 1800" />
             </div>
           </div>
-          <div class="block">
+          <div class="vo2-result" id="yoyo-result" aria-live="polite"></div>
+        </section>
+
+        <section class="block vo2-test" id="t-shuttle">
+          <div class="vo2-test-input">
             <h2>20 m 往返跑（Léger 1988）</h2>
             <p class="protocol">本页按 Léger 1988 版本计算：第 1 级 8.5 km/h，每分钟一级、每级加 0.5 km/h。其他音频版本级数对应的速度不同，不能直接填。</p>
-            <ol class="steps">
-              <li>在防滑地面上标出相距 20 m 的两条线，播放 Léger 1988 音频。</li>
-              <li>每声信号前跑到对面线并踩线，跟着节奏不断往返；不要提前冲过去等。</li>
-              <li>连续两次没在信号响时到线就停。记下停下时播报到的级数。</li>
-            </ol>
+            <details class="vo2-steps">
+              <summary>怎么测</summary>
+              <ol class="steps">
+                <li>在防滑地面上标出相距 20 m 的两条线，播放 Léger 1988 音频。</li>
+                <li>每声信号前跑到对面线并踩线，跟着节奏不断往返；不要提前冲过去等。</li>
+                <li>连续两次没在信号响时到线就停。记下停下时播报到的级数。</li>
+              </ol>
+            </details>
             <div class="field">
               <label for="sr-stage">级数（停下时播报的级数）</label>
               <input id="sr-stage" type="number" inputmode="numeric" min="1" max="21" step="1" placeholder="例如 9" />
@@ -282,14 +293,21 @@
               <p class="field-note range-note" id="sr-age-range-note" hidden></p>
             </div>
           </div>
-          <div class="block">
+          <div class="vo2-result" id="shuttle-result" aria-live="polite"></div>
+        </section>
+
+        <section class="block vo2-test" id="t-ift">
+          <div class="vo2-test-input">
             <h2>30-15 间歇体能测试</h2>
-            <p class="protocol">跑 30 秒、走 15 秒，40 m 往返。成绩是最后一个完整完成的级的速度 V<sub>IFT</sub>，主要用来定间歇跑距离。</p>
-            <ol class="steps">
-              <li>标出相距 40 m 的两端线和中线，每条线两侧各留 3 m 区域。用官方 30-15 IFT 音频。</li>
-              <li>第 1 级 8 km/h，每级（30 秒跑 + 15 秒走）加 0.5 km/h。15 秒内走到最近的线，从那里开始下一级。</li>
-              <li>连续 3 次没在信号时进入 3 m 区，或主动停下，即结束。最后完整跑完的那级速度就是 V<sub>IFT</sub>。</li>
-            </ol>
+            <p class="protocol">跑 30 秒、走 15 秒，40 m 往返。成绩是最后一个完整完成的级的速度 V<sub>IFT</sub>，主要用来定间歇跑距离；间歇距离只需要 V<sub>IFT</sub>。</p>
+            <details class="vo2-steps">
+              <summary>怎么测</summary>
+              <ol class="steps">
+                <li>标出相距 40 m 的两端线和中线，每条线两侧各留 3 m 区域。用官方 30-15 IFT 音频。</li>
+                <li>第 1 级 8 km/h，每级（30 秒跑 + 15 秒走）加 0.5 km/h。15 秒内走到最近的线，从那里开始下一级。</li>
+                <li>连续 3 次没在信号时进入 3 m 区，或主动停下，即结束。最后完整跑完的那级速度就是 V<sub>IFT</sub>。</li>
+              </ol>
+            </details>
             <div class="field">
               <label for="ift-v">V<sub>IFT</sub>（km/h）</label>
               <input id="ift-v" type="number" inputmode="decimal" min="8" max="28" step="0.5" placeholder="例如 19" />
@@ -300,10 +318,6 @@
               <p class="field-note range-note" id="ift-age-range-note" hidden></p>
             </div>
             <div class="field">
-              <label for="ift-kg">体重（kg）</label>
-              <input id="ift-kg" type="number" inputmode="decimal" data-persist="weight" min="30" max="200" step="0.1" />
-            </div>
-            <div class="field">
               <fieldset class="radio-group">
                 <legend>性别</legend>
                 <div class="radios">
@@ -312,14 +326,18 @@
                 </div>
               </fieldset>
             </div>
+            <div class="field">
+              <label for="ift-kg">体重（kg）</label>
+              <input id="ift-kg" type="number" inputmode="decimal" data-persist="weight" min="30" max="200" step="0.1" />
+            </div>
           </div>
-          <div class="block">
-            <h2>ACSM 代谢式（当前强度 VO₂）</h2>
+          <div class="vo2-result" id="ift-result" aria-live="polite"></div>
+        </section>
+
+        <section class="block vo2-test" id="t-acsm">
+          <div class="vo2-test-input">
+            <h2>ACSM 代谢式（不是 VO₂max）</h2>
             <p class="protocol">这不是最大摄氧量测试。已知当时的配速或功率，估算那个强度下的摄氧量。</p>
-            <ol class="steps">
-              <li>走或跑：填当时配速（min/km）和坡度（平路填 0）。</li>
-              <li>骑：填当时功率（W）和体重。选对「走 / 跑 / 骑」。</li>
-            </ol>
             <div class="field">
               <fieldset class="radio-group">
                 <legend>方式</legend>
@@ -335,7 +353,7 @@
               <input id="met-pace" type="text" inputmode="decimal" data-time="pace" placeholder="5:30 或 530" />
             </div>
             <div class="field">
-              <label for="met-grade">坡度（%，走/跑）</label>
+              <label for="met-grade">坡度（%，走/跑，平路可留空）</label>
               <input id="met-grade" type="number" inputmode="decimal" min="0" max="20" step="0.5" placeholder="0" />
             </div>
             <div class="field">
@@ -347,14 +365,79 @@
               <input id="met-kg" type="number" inputmode="decimal" data-persist="weight" min="30" max="200" step="0.1" />
             </div>
           </div>
-        </form>
+          <div class="vo2-result" id="acsm-result" aria-live="polite"></div>
+        </section>
+      </form>
 
-        <div class="panel results" id="vo2-results" aria-live="polite">
-          <h2>结果</h2>
-          <p class="result-empty" id="vo2-empty">完成任一项测试后，这里给出 VO₂max 或当前强度摄氧量。</p>
-          <div id="vo2-output" hidden></div>
-        </div>
-      </div>
+      <details class="method-details">
+        <summary>方法与精度</summary>
+        <table class="method-table">
+          <thead>
+            <tr>
+              <th>方法</th>
+              <th>公式 / 做法</th>
+              <th>适用</th>
+              <th>不适用</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Cooper 12 分钟跑</td>
+              <td class="formula">VO₂max = (距离 m - 504.9) / 44.73</td>
+              <td>能维持 12 分钟匀速快跑</td>
+              <td>完全久坐、中断或走路；体重过大导致经济性差、公式低估</td>
+            </tr>
+            <tr>
+              <td>1.5 英里（2.41 km）计时跑</td>
+              <td class="formula">VO₂max = 3.5 + 483 / 时间(分钟)</td>
+              <td>有跑步基础者，跑完 1.5 英里（2414 m）</td>
+              <td>同上，跑不下来不要硬测</td>
+            </tr>
+            <tr>
+              <td>Rockport 1.6 km 步行</td>
+              <td>需体重、年龄、性别、走完时间、即刻心率</td>
+              <td>无运动习惯、大 BMI（body mass index，体重指数）、不适合跑 12 分钟者</td>
+              <td>已经能轻松跑步的训练者（专项性不足）</td>
+            </tr>
+            <tr>
+              <td>Queen's College 台阶</td>
+              <td>41.3 cm 台阶 3 分钟，测恢复心率</td>
+              <td>无跑道、无运动习惯者的粗略参考</td>
+              <td>精度约 ±10%，不能当训练标尺</td>
+            </tr>
+            <tr>
+              <td>YMCA 式功率车（Tanaka 变体）</td>
+              <td>热身后骑两档由轻到重的稳定功率，记下每档心率</td>
+              <td>不能跑步、有功率车者</td>
+              <td>必须亚极量；两档心率都要在 110–150 bpm，第二档高于第一档。原版 YMCA 外推到 220 − 年龄，本页改用 Tanaka</td>
+            </tr>
+            <tr>
+              <td>Yo-Yo 间歇恢复测试（IR1 / IR2）</td>
+              <td class="formula">IR1：VO₂max = 距离 m × 0.0084 + 36.4；IR2：× 0.0136 + 45.3</td>
+              <td>球类队伍，追踪总距离的变化</td>
+              <td>想精确知道 VO₂max：与实验室值相关仅 r = 0.70（IR1）/ 0.58（IR2）</td>
+            </tr>
+            <tr>
+              <td>20 m 往返跑（Léger 1988，1 分钟一级）</td>
+              <td class="formula">速度 S = 8 + 0.5 × 级数；VO₂max = 31.025 + 3.238S − 3.248A + 0.1536AS（成人 A 取 18，约 −27.4 + 6.0S）</td>
+              <td>学生、球类与有急停急起的项目；可集体测</td>
+              <td>使用其他音频版本（如 Ramsbottom 1988 起速与级数不同）的成绩</td>
+            </tr>
+            <tr>
+              <td>30-15 间歇体能测试（30-15 IFT）</td>
+              <td class="formula">VO₂max = 28.3 − 2.15G − 0.741A − 0.0357W + 0.0586A·V + 1.03V</td>
+              <td>球类队伍；V<sub>IFT</sub> 直接用来定 15 s/15 s 间歇的跑动距离</td>
+              <td>公式只在约 16 岁青少年手球运动员中验证，成人 VO₂max 仅供参考</td>
+            </tr>
+            <tr>
+              <td>ACSM（American College of Sports Medicine）代谢式</td>
+              <td>走/跑：速度 + 坡度；骑：功率 + 体重</td>
+              <td>已知配速或功率时估当前摄氧量</td>
+              <td>估的是该强度的 VO₂，不是 VO₂max</td>
+            </tr>
+          </tbody>
+        </table>
+      </details>
 
       <section class="notes">
         <h2>注意事项</h2>

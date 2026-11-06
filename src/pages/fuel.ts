@@ -1,6 +1,6 @@
 import "../styles/base.css";
 import { initChrome } from "../chrome";
-import { bindForm, inputValue } from "../lib/dom";
+import { bindForm, inputValue, readNumber } from "../lib/dom";
 import {
   ACSM_DRINK_SODIUM_MMOL_PER_L,
   capsuleFillEstimate,
@@ -12,7 +12,6 @@ import {
   RECIPE_WARNING_TEXT,
   saltGramsForDrink,
   SALTS,
-  splitServings,
   sweatSodiumLoss,
   sweatSodiumLossRange,
   SWEAT_SODIUM_MMOL_PER_L,
@@ -26,10 +25,13 @@ import { formatGrams, formatKg, parseNumber } from "../lib/format";
 import {
   caffeineDose,
   carbDaily,
-  carbDuring,
   creatineDose,
   DEFAULT_GEL_GRAMS,
+  diyCarbTarget,
   diyRecipeParts,
+  duringCarbRow,
+  isGelConcentration,
+  LARGE_GEL_CARB_G,
   proteinDose,
   raceCarbMidpoint,
   raceFuelPlan,
@@ -72,6 +74,30 @@ function raceItem(name: string, value: string, unit: string, meta: string): stri
       <p class="result-goal-load">${value}${unit ? `<small>${unit}</small>` : ""}</p>
       <p class="result-goal-meta">${meta}</p>
     </div>`;
+}
+
+/** Trailing notes as the last row of a result-goals list, so they get the same spacing as the items above. */
+function noteItem(paragraphs: string[]): string {
+  if (paragraphs.length === 0) return "";
+  return `<div class="result-goal">${paragraphs.join("")}</div>`;
+}
+
+function show(id: string, visible: boolean): void {
+  const el = document.getElementById(id);
+  if (el) el.hidden = !visible;
+}
+
+function setText(id: string, text: string): void {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
+}
+
+/** value is null when empty or out of the input's min/max; invalid marks the latter (the form shows the range). */
+function numberField(id: string): { value: number | null; invalid: boolean } {
+  const el = document.getElementById(id);
+  const value = readNumber(id);
+  const filled = inputValue(id).trim() !== "" || (el instanceof HTMLInputElement && el.validity.badInput);
+  return { value, invalid: filled && value === null };
 }
 
 function racePreItems(plan: RaceFuelPlan): string {
@@ -129,25 +155,31 @@ function raceDuringItems(plan: RaceFuelPlan, gelAssumed: boolean): string {
   }
 }
 
-function raceFluidItem(plan: RaceFuelPlan): string {
+const UPPER_LABEL = "饮水 · 上限（不要超过）";
+
+function upperMeta(maxL: number, totalL: number | null): string {
+  const total = totalL === null ? "" : `全程不超过约 ${totalL.toFixed(1)} L。`;
+  return `= 你测的出汗率 ${maxL.toFixed(2)} L/h。${total}这是上限，不是要喝到的量：喝得比出汗多，体重会增加（ACSM 2007，Sawka）`;
+}
+
+function raceFluidItems(plan: RaceFuelPlan): string {
   const f = plan.fluid;
   switch (f.status) {
     case "noSweat":
-      return raceItem("饮水", "先测出汗率", "", "用上方出汗率测一次。不同人每小时出汗差好几倍，这里不给固定的 mL/h");
+      return raceItem("饮水", "先测出汗率", "", "用表单里的「出汗率」测一次。不同人每小时出汗差好几倍，这里不给固定的 mL/h");
     case "noWeight":
-      return raceItem("饮水", `≤ ${f.maxLitersPerHour.toFixed(2)}`, "L/h", "来自上方出汗率；填体重后给出下限");
+      return raceItem(UPPER_LABEL, `≤ ${f.maxLitersPerHour.toFixed(2)}`, "L/h", `${upperMeta(f.maxLitersPerHour, f.maxLitersPerHour * (plan.minutes / 60))}。填体重后给出下限`);
     case "ok": {
-      const floorNote =
+      const lower =
         f.minLitersPerHour === 0
-          ? "按这个出汗率，全程不喝体重也降不到 2%，渴了再喝，但不要超过上限。"
-          : `下限让失水不超过体重 2%（${formatKg(f.allowableLossKg)} kg）。`;
-      const longNote = plan.minutes > 180 ? "超过 3 小时，小偏差会累积。" : "";
-      return raceItem(
-        "饮水",
-        rangeText(f.minLitersPerHour, f.maxLitersPerHour, 2),
-        "L/h",
-        `来自上方出汗率 ${f.maxLitersPerHour.toFixed(2)} L/h，全程 ${rangeText(f.minTotalL, f.maxTotalL, 1)} L。${floorNote}上限是出汗量本身，喝到体重增加有低钠风险。${longNote}`,
-      );
+          ? raceItem("饮水 · 下限", "不设", "", "按这个出汗率，全程不喝体重也降不到 2%。渴了再喝，不超过上限")
+          : raceItem(
+              "饮水 · 下限",
+              f.minLitersPerHour.toFixed(2),
+              "L/h",
+              `让失水不超过体重 2%（${formatKg(f.allowableLossKg)} kg），全程约 ${f.minTotalL.toFixed(1)} L（ACSM 2007）。上下限之间按口渴喝（Hew-Butler 2015 共识）`,
+            );
+      return raceItem(UPPER_LABEL, `≤ ${f.maxLitersPerHour.toFixed(2)}`, "L/h", `${upperMeta(f.maxLitersPerHour, f.maxTotalL)}`) + lower;
     }
     default: {
       const exhaustive: never = f;
@@ -156,18 +188,19 @@ function raceFluidItem(plan: RaceFuelPlan): string {
   }
 }
 
-function numberField(id: string): { value: number | null; bad: boolean } {
-  const el = document.getElementById(id);
-  if (el instanceof HTMLInputElement && el.validity.badInput) return { value: null, bad: true };
-  const raw = inputValue(id);
-  const value = parseNumber(raw);
-  return { value, bad: raw.trim() !== "" && value === null };
+function raceFluidNotes(plan: RaceFuelPlan): string[] {
+  if (plan.fluid.status === "noSweat") return [];
+  const longer = plan.minutes > 240 ? "你的预计时长超过 4 小时。" : "";
+  return [
+    `<p class="result-method"><span class="result-flag" data-tone="caution">低钠风险</span> 波士顿马拉松研究（Almond 2005，<cite>NEJM</cite>）中，比赛中体重增加、完赛超过 4 小时、BMI 偏低（&lt;20）与运动相关低钠血症有关。Hew-Butler 2015 共识指出，体型小、配速慢、喝得比出汗多的人更容易发生，建议按口渴喝。${longer}赛后体重比赛前还重，说明喝多了。</p>`,
+    `<p class="result-method">出汗率只来自你测的那一次；天气更热、强度更高时出汗更多（Baker 2017），比赛条件差别大时按比赛条件重测。</p>`,
+  ];
 }
 
 function readRaceDuration(): RaceDuration {
   const hours = numberField("rf-hours");
   const mins = numberField("rf-mins");
-  if (hours.bad || mins.bad) return { status: "invalid" };
+  if (hours.invalid || mins.invalid) return { status: "invalid" };
   return raceMinutesFromParts(hours.value, mins.value);
 }
 
@@ -186,40 +219,74 @@ function updateDurationEcho(duration: RaceDuration): void {
       : "小时填 0–24、分钟填 0–59，合计大于 0 且不超过 24 小时。";
 }
 
-function raceHtml(duration: RaceDuration, kg: number | null, sweatLitersPerHour: number | null): { html: string; plan: RaceFuelPlan | null } | null {
+function readGel(): { grams: number; assumed: boolean } {
+  const gel = readNumber("rf-gel");
+  return gel === null ? { grams: DEFAULT_GEL_GRAMS, assumed: true } : { grams: gel, assumed: false };
+}
+
+function raceHtml(duration: RaceDuration, plan: RaceFuelPlan | null, kg: number | null, gelAssumed: boolean): string | null {
   if (duration.status === "empty") return null;
-  const gelRaw = parseNumber(inputValue("rf-gel"));
-  const gelAssumed = gelRaw === null || !(gelRaw > 0);
-  const plan =
-    duration.status === "valid"
-      ? raceFuelPlan({ minutes: duration.minutes, weightKg: kg, sweatLitersPerHour, gelGrams: gelAssumed ? DEFAULT_GEL_GRAMS : gelRaw })
-      : null;
   if (!plan) {
-    return {
-      plan: null,
-      html: `
+    return `
       <div class="block">
         <p class="result-kicker">比赛日补给</p>
         <p class="result-method">预计时长需大于 0 且不超过 24 小时：小时填 0–24，分钟填 0–59。</p>
       </div>
-    `,
-    };
+    `;
   }
-
-  return {
-    plan,
-    html: `
+  return `
     <div class="block">
       <p class="result-kicker">比赛日补给 · 按 ${formatDurationZh(plan.minutes)}${kg !== null ? ` · ${formatKg(kg)} kg` : ""}</p>
       <div class="result-goals">
         ${racePreItems(plan)}
         ${raceDuringItems(plan, gelAssumed)}
-        ${raceFluidItem(plan)}
+        ${raceFluidItems(plan)}
+        ${noteItem([
+          ...raceFluidNotes(plan),
+          `<p class="result-method">钠：ACSM 2007 引用的运动饮料约含钠 20–30 mEq/L（约 460–690 mg/L）。汗钠流失见「盐丸 / 饮料加盐」。</p>`,
+        ])}
       </div>
-      <p class="result-method">钠：ACSM 2007 引用的运动饮料约含钠 20–30 mEq/L（约 460–690 mg/L）。汗钠个体差异大，这里不给个人钠量。出汗率随天气和强度变，比赛条件差别大时重新测。</p>
     </div>
-  `,
-  };
+  `;
+}
+
+function supplementHtml(kg: number, racePlan: RaceFuelPlan | null): string {
+  const caffeine = caffeineDose(kg);
+  const protein = proteinDose(kg);
+  const creatine = creatineDose(kg);
+  const during = duringCarbRow(parseSession(inputValue("fu-session")), racePlan);
+  const daily = carbDaily(kg, parseDay(inputValue("fu-day")));
+  const row = (name: string, dose: string, note: string): string =>
+    `<tr><td style="white-space: nowrap">${name}</td><td><span class="mono">${dose}</span><br /><span class="result-goal-meta">${note}</span></td></tr>`;
+  const table = `
+        <table class="result-table">
+          <thead><tr><th>项目</th><th>剂量</th></tr></thead>
+          <tbody>
+            ${row("咖啡因", `${formatGrams(caffeine.low)}–${formatGrams(caffeine.high)} mg`, "3–6 mg/kg，运动前约 60 分钟（30–90）")}
+            ${row("蛋白 · 耐力", `${formatGrams(protein.endurance.low)}–${formatGrams(protein.endurance.high)} g/日`, "1.2–1.6 g/kg")}
+            ${row("蛋白 · 增肌", `${formatGrams(protein.hypertrophy.low)}–${formatGrams(protein.hypertrophy.high)} g/日`, "1.6–2.2 g/kg")}
+            ${row("肌酸负荷", `${formatGrams(creatine.loading)} g/日 × 5–7 天`, "0.3 g/kg，可分 3–4 次")}
+            ${row("肌酸维持", `${creatine.maintenanceLow}–${creatine.maintenanceHigh} g/日`, "也可跳过负荷、直接维持")}
+            ${row("运动中碳水", during.text, during.note)}
+            ${row("日常碳水", `${formatGrams(daily.low)}–${formatGrams(daily.high)} g/日`, daily.note)}
+          </tbody>
+        </table>`;
+  if (racePlan) {
+    return `
+      <div class="block">
+        <details class="method-details">
+          <summary>按体重 ${formatKg(kg)} kg · 咖啡因、蛋白、肌酸、日常碳水</summary>
+          ${table}
+        </details>
+      </div>
+    `;
+  }
+  return `
+      <div class="block">
+        <p class="result-kicker">按体重 ${formatKg(kg)} kg</p>
+        ${table}
+      </div>
+    `;
 }
 
 const DIY_CHOICES: readonly DiyIngredientChoice[] = [
@@ -255,62 +322,102 @@ function parseSaltChoice(raw: string): SaltId {
   return "refined";
 }
 
-function positive(value: number | null): number | undefined {
-  return value !== null && value > 0 ? value : undefined;
-}
+const DIY_INPUTS = ["dy-label", "dy-conc-custom", "dy-carb", "dy-servings", "dy-gel-carb"] as const;
 
-function sugarHtml(racePlan: RaceFuelPlan | null): { html: string; drinkVolumeL: number | null } | null {
+function sugarHtml(racePlan: RaceFuelPlan | null, gelAssumed: boolean): { html: string; drinkVolumeL: number | null } | null {
   const choice = parseDiyChoice(inputValue("dy-ing"));
-  const label = positive(parseNumber(inputValue("dy-label")));
-  const userCarb = positive(parseNumber(inputValue("dy-carb")));
-  const midpoint = raceCarbMidpoint(racePlan);
-  const hint = document.getElementById("dy-carb-hint");
-  if (hint) {
-    hint.textContent =
-      midpoint !== null
-        ? `留空时取比赛日补给全程碳水的中点：${formatGrams(midpoint)} g。`
-        : "留空时取比赛日补给全程碳水的中点；上面填时长后才有。";
-  }
-  const carbGrams = userCarb ?? midpoint;
-  const carbSource = userCarb !== undefined ? "你填的总碳水" : "来自比赛日补给（全程区间的中点）";
-
   const concRaw = inputValue("dy-conc");
-  const customWrap = document.getElementById("dy-conc-custom-wrap");
-  if (customWrap) customWrap.hidden = concRaw !== "custom";
-  const conc = concRaw === "custom" ? positive(parseNumber(inputValue("dy-conc-custom"))) : positive(parseNumber(concRaw));
+  show("dy-conc-custom-wrap", concRaw === "custom");
+  const concField = concRaw === "custom" ? numberField("dy-conc-custom") : { value: parseNumber(concRaw), invalid: false };
+  const conc = concField.value !== null && concField.value > 0 ? concField.value : null;
+  const gelMode = conc !== null && isGelConcentration(conc);
+
+  const raceGels = racePlan?.during.gels ?? null;
+  const midpoint = raceCarbMidpoint(racePlan);
+  const defaultPerGel = raceGels?.gramsPerGel ?? DEFAULT_GEL_GRAMS;
+  show("dy-carb-wrap", !gelMode);
+  show("dy-gel-wrap", gelMode);
+  show("dy-servings-hint", gelMode);
+  setText("dy-servings-label", gelMode ? "做几支" : "分几份（可选）");
+  setText(
+    "dy-servings-hint",
+    raceGels ? `留空按比赛日补给能量胶支数的下限：${raceGels.countLow} 支。` : "填要做几支；填了比赛日预计时长后，留空按能量胶支数下限。",
+  );
+  setText(
+    "dy-gel-hint",
+    raceGels
+      ? `留空按比赛日补给的每支能量胶：${formatGrams(defaultPerGel)} g${gelAssumed ? "（那里没填，按 25 g）" : ""}。`
+      : `留空按 ${DEFAULT_GEL_GRAMS} g。`,
+  );
+  const gelInput = document.getElementById("dy-gel-carb");
+  if (gelInput instanceof HTMLInputElement) gelInput.placeholder = formatGrams(defaultPerGel);
+  setText(
+    "dy-carb-hint",
+    midpoint !== null
+      ? `留空时取比赛日补给全程碳水的中点：${formatGrams(midpoint)} g。`
+      : "留空时取比赛日补给全程碳水的中点；上面填时长后才有。",
+  );
+
+  const touched = DIY_INPUTS.some((id) => inputValue(id).trim() !== "") || concRaw !== "8" || choice !== "sucrose";
+  if (!touched && racePlan === null) return null;
 
   const wrap = (body: string): string => `
     <div class="block">
-      <p class="result-kicker">自制补给 · 糖水 / 自制胶</p>
+      <p class="result-kicker">自制补给 · ${gelMode ? "自制胶" : "糖水"}</p>
       ${body}
     </div>`;
+  const message = (text: string): { html: string; drinkVolumeL: null } => ({ html: wrap(`<p class="result-method">${text}</p>`), drinkVolumeL: null });
 
-  if (carbGrams === null || carbGrams === undefined) {
-    if (inputValue("dy-carb").trim() === "" && racePlan === null) return null;
-    return {
-      html: wrap(`<p class="result-method">填总碳水克数，或在比赛日补给里填一个超过 75 分钟的时长。</p>`),
-      drinkVolumeL: null,
-    };
+  if (conc === null || conc > 100 || concField.invalid) return message("自定义浓度填 1–100 之间的百分数。");
+  const label = numberField("dy-label");
+  const carb = numberField("dy-carb");
+  const servings = numberField("dy-servings");
+  const perGel = numberField("dy-gel-carb");
+  const outOfRange = [
+    label.invalid ? "配料表碳水" : "",
+    !gelMode && carb.invalid ? "总碳水" : "",
+    servings.invalid ? (gelMode ? "做几支" : "分几份") : "",
+    gelMode && perGel.invalid ? "每支碳水" : "",
+  ].filter(Boolean);
+  if (outOfRange.length > 0) return message(`${outOfRange.map((n) => `「${n}」`).join("、")}超出范围，按输入框下的提示改。`);
+
+  const target = diyCarbTarget({
+    concentrationPct: conc,
+    totalCarbG: carb.value,
+    servings: servings.value,
+    perGelCarbG: perGel.value,
+    plan: racePlan,
+  });
+  if (target.carbGrams === null) {
+    switch (target.missing) {
+      case "total":
+        return message("填总碳水克数，或在比赛日补给里填一个超过 75 分钟的时长。");
+      case "count":
+        return message("填做几支；或在比赛日补给里填一个超过 75 分钟的时长，按能量胶支数下限。");
+      case "badServings":
+        return message(gelMode ? "支数填正整数。" : "份数填正整数。");
+      default: {
+        const exhaustive: never = target;
+        throw new Error(`未处理的缺失项: ${String(exhaustive)}`);
+      }
+    }
   }
-  if (conc === undefined || conc > 100) {
-    return { html: wrap(`<p class="result-method">自定义浓度填 1–100 之间的百分数。</p>`), drinkVolumeL: null };
-  }
-  const parts = diyRecipeParts(choice, choice === "glucoseSucrose1to1" ? undefined : label);
+
+  const labelValue = label.value ?? undefined;
+  const parts = diyRecipeParts(choice, choice === "glucoseSucrose1to1" ? undefined : labelValue);
   if (!parts) {
-    const why =
-      choice === "custom"
-        ? "选「其他 / 按配料表」时，需填配料表里每 100 g 的碳水克数。"
-        : "配料表碳水需在 1–100 g/100 g 之间。";
-    return { html: wrap(`<p class="result-method">${why}</p>`), drinkVolumeL: null };
+    return message(
+      choice === "custom" ? "选「其他 / 按配料表」时，需填配料表里每 100 g 的碳水克数。" : "配料表碳水需在 1–100 g/100 g 之间。",
+    );
   }
-  const recipe = planRecipe({ parts, carbGrams, concentrationPct: conc });
+  const recipe = planRecipe({ parts, carbGrams: target.carbGrams, concentrationPct: conc });
   if (!recipe) {
     const max = maxConcentrationPct(parts);
-    const why =
+    return message(
       max !== null && conc > max
         ? `${DIY_CHOICE_NAME[choice]} 不加水最高约 ${max.toFixed(0)}%，配不出 ${conc}%。换浓度更低的档，或换含碳水更高的原料。`
-        : "这组输入算不出配方，请核对。";
-    return { html: wrap(`<p class="result-method">${why}</p>`), drinkVolumeL: null };
+        : "这组输入算不出配方，请核对。",
+    );
   }
 
   const a = recipe.analysis;
@@ -332,29 +439,48 @@ function sugarHtml(racePlan: RaceFuelPlan | null): { html: string; drinkVolumeL:
     osmo = "只知道配料表碳水，不知道糖的组成，无法估算";
   }
 
-  const servingsRaw = parseNumber(inputValue("dy-servings"));
-  let servingLine = "";
-  if (servingsRaw !== null) {
-    const perServing = splitServings(a.totalGrams, servingsRaw);
-    servingLine =
-      perServing === null
-        ? `<p class="result-method">份数填正整数。</p>`
-        : `<p class="result-method">分 ${servingsRaw} 份：每份约 ${formatGrams(perServing)} g，含碳水约 ${formatGrams(a.carbGrams / servingsRaw)} g。</p>`;
+  let source: string;
+  let servingItem = "";
+  const warnings = a.warnings.map((w) => RECIPE_WARNING_TEXT[w]);
+  if (target.mode === "gel") {
+    const countFrom = target.countSource === "user" ? "支数是你填的" : "支数取比赛日补给能量胶的下限";
+    const perFrom =
+      target.perGelSource === "user"
+        ? "每支碳水是你填的"
+        : target.perGelSource === "race"
+          ? `每支碳水同比赛日补给的能量胶${gelAssumed ? "（那里没填，按 25 g）" : ""}`
+          : `每支碳水按 ${DEFAULT_GEL_GRAMS} g`;
+    source = `${target.count} 支 × 每支碳水 ${formatGrams(target.perGelCarbG)} g = ${formatGrams(target.carbGrams)} g · ${countFrom}，${perFrom}`;
+    servingItem = raceItem("每支", formatGrams(a.totalGrams / target.count), "g", `含碳水 ${formatGrams(target.perGelCarbG)} g，共 ${target.count} 支`);
+    if (target.largerThanCommercial) {
+      warnings.push(
+        `每支碳水超过约 ${LARGE_GEL_CARB_G} g，比常见市售能量胶大：多数单支约 20–30 g 碳水，高碳款约 40 g（产品标签观察，以包装为准）。`,
+      );
+    }
+  } else {
+    source = `总碳水 ${formatGrams(target.carbGrams)} g · ${target.totalSource === "user" ? "你填的总碳水" : "来自比赛日补给（全程区间的中点）"}`;
+    if (target.servings !== null) {
+      servingItem = raceItem(
+        `分 ${target.servings} 份`,
+        formatGrams(a.totalGrams / target.servings),
+        "g / 份",
+        `每份含碳水约 ${formatGrams(target.carbGrams / target.servings)} g`,
+      );
+    }
   }
 
-  const warnings = a.warnings.map((w) => RECIPE_WARNING_TEXT[w]);
   const glucoseOnly = a.sugars !== null && a.sugars.fructoseG === 0;
   if (glucoseOnly && racePlan !== null && racePlan.during.highPerHour > 60) {
     warnings.push(
       "只用葡萄糖时，肠道吸收葡萄糖的转运体（SGLT1）约 60 g/h 就饱和；想吃到 60 g/h 以上要加果糖或蔗糖（Jeukendrup 2014）。这是吸收上限，和能不能溶解是两回事。",
     );
   }
-  const isDrink = a.concentrationPct <= CONCENTRATED_PCT;
   const html = wrap(`
-      <p class="result-method">总碳水 ${formatGrams(carbGrams)} g · ${carbSource}；浓度 ${conc}%${concRaw === "50" ? "（无文献推荐值，DIY 起点）" : ""}。</p>
+      <p class="result-method">${source}；浓度 ${conc}%${concRaw === "50" ? "（无文献推荐值，DIY 起点）" : ""}。</p>
       <div class="result-goals">
         ${raceItem("原料", items, "", "按配料表碳水折算；糖浆自带的水已扣除")}
         ${raceItem("加水", `${water}`, "g ≈ mL", `成品总重约 ${formatGrams(a.totalGrams)} g，热量约 ${Math.round(a.kcal)} kcal`)}
+        ${servingItem}
         ${raceItem(
           "葡萄糖 : 果糖",
           ratio,
@@ -364,18 +490,18 @@ function sugarHtml(racePlan: RaceFuelPlan | null): { html: string; drinkVolumeL:
             : "按原料典型组成估算；果葡糖浆以配料表和产品规格为准",
         )}
         ${raceItem("估算渗透压", a.osmolality ? `${Math.round(a.osmolality.mOsmPerKg)}` : "—", a.osmolality ? "mOsm/kg" : "", osmo)}
+        ${noteItem(warnings.map((w) => `<p class="result-method">${w}</p>`))}
       </div>
-      ${servingLine}
-      ${warnings.map((w) => `<p class="result-method">${w}</p>`).join("")}
   `);
-  return { html, drinkVolumeL: isDrink ? a.totalGrams / 1000 : null };
+  return { html, drinkVolumeL: gelMode ? null : a.totalGrams / 1000 };
 }
 
 const CAPSULE_SIZES: readonly CapsuleSize[] = ["00", "0", "1"];
 
 function saltHtml(sweatLitersPerHour: number | null, raceMinutes: number | null, drinkVolumeL: number | null, touched: boolean): string | null {
   const salt = parseSaltChoice(inputValue("sa-salt"));
-  const label = positive(parseNumber(inputValue("sa-label")));
+  const labelField = numberField("sa-label");
+  const label = labelField.value ?? undefined;
   const sel: SaltSelection = label === undefined ? { salt } : { salt, labelSodiumMgPer100g: label };
   const needsLabel = SALTS[salt].sodiumMgPer100g === null;
   const anyInput =
@@ -387,16 +513,16 @@ function saltHtml(sweatLitersPerHour: number | null, raceMinutes: number | null,
       <p class="result-kicker">自制补给 · 盐丸 / 饮料加盐</p>
       ${body}
     </div>`;
+  if (labelField.invalid) {
+    return wrap(`<p class="result-method">配料表钠填 1–40,000 mg/100 g（纯氯化钠约 39,340）；更大多半是单位填错。</p>`);
+  }
   if (needsLabel && label === undefined) {
     return wrap(`<p class="result-method">${salt === "lowSodium" ? "低钠盐" : "这种盐"}的钠含量因产品而异，先填配料表里的钠 mg/100 g。</p>`);
   }
-  if (label !== undefined && label > 40000) {
-    return wrap(`<p class="result-method">钠超过 40,000 mg/100 g 不可能（纯氯化钠约 39,340），多半是单位填错。</p>`);
-  }
 
   const items: string[] = [];
-  const capNet = positive(parseNumber(inputValue("sa-cap10")));
-  const capsule = capNet === undefined ? null : capsuleFromWeighing({ netSaltGrams: capNet, capsuleCount: 10, ...sel });
+  const capNet = readNumber("sa-cap10");
+  const capsule = capNet === null ? null : capsuleFromWeighing({ netSaltGrams: capNet, capsuleCount: 10, ...sel });
   if (capsule) {
     items.push(
       raceItem("每粒盐丸", `${Math.round(capsule.sodiumMgPerCapsule)}`, "mg 钠", `含盐 ${Math.round(capsule.saltMgPerCapsule)} mg（按 10 粒净重 ${capNet} g 算）`),
@@ -409,34 +535,49 @@ function saltHtml(sweatLitersPerHour: number | null, raceMinutes: number | null,
     items.push(raceItem("每粒盐丸 · 粗估，以称重为准", "未称重", "", `装满时：${rows.join("；")}。按胶囊容积 × 细盐堆积密度估，实际装量差别大`));
   }
 
-  const sweatNa = positive(parseNumber(inputValue("sa-sweatna")));
+  const sweatNaField = numberField("sa-sweatna");
+  const sweatNa = sweatNaField.value;
   const hours = raceMinutes === null ? null : raceMinutes / 60;
+  const totalText = (mgPerHour: number): string => (hours === null ? "" : `，全程约 ${Math.round(mgPerHour * hours)} mg`);
   let lossLow: number | null = null;
   let lossHigh: number | null = null;
   if (sweatLitersPerHour === null) {
-    items.push(raceItem("汗钠流失", "先测出汗率", "", "用上方出汗率测一次，才能估每小时流失多少钠"));
-  } else if (sweatNa !== undefined) {
+    items.push(raceItem("汗钠流失", "先测出汗率", "", "用表单里的「出汗率」测一次，才能估每小时流失多少钠"));
+  } else if (sweatNaField.invalid) {
+    items.push(raceItem("汗钠流失", "—", "", "汗钠浓度填 5–150 mmol/L"));
+  } else if (sweatNa !== null) {
     const loss = sweatSodiumLoss(sweatLitersPerHour, sweatNa);
     if (loss) {
       lossLow = loss.mgPerHour;
       lossHigh = loss.mgPerHour;
-      const total = hours === null ? "" : `，全程约 ${Math.round(loss.mgPerHour * hours)} mg`;
-      items.push(raceItem("汗钠流失", `${Math.round(loss.mgPerHour)}`, "mg/h", `出汗率 ${sweatLitersPerHour.toFixed(2)} L/h（来自上方出汗率）× 你的汗钠 ${sweatNa} mmol/L${total}。这是流失量，不是补充处方`));
-    } else {
-      items.push(raceItem("汗钠流失", "—", "", "汗钠浓度需在 0–150 mmol/L 之间"));
+      items.push(
+        raceItem(
+          "汗钠流失",
+          `${Math.round(loss.mgPerHour)}`,
+          "mg/h",
+          `你测的出汗率 ${sweatLitersPerHour.toFixed(2)} L/h × 你的汗钠 ${sweatNa} mmol/L${totalText(loss.mgPerHour)}。这是流失量，不是补充处方`,
+        ),
+      );
     }
   } else {
     const range = sweatSodiumLossRange(sweatLitersPerHour);
     if (range) {
       lossLow = range.low;
       lossHigh = range.high;
-      const total = hours === null ? "" : `，全程约 ${Math.round(range.low * hours)}–${Math.round(range.high * hours)} mg`;
       items.push(
         raceItem(
-          "汗钠流失",
+          "汗钠流失 · 按平均汗钠",
+          `约 ${Math.round(range.mean)}`,
+          "mg/h",
+          `你测的出汗率 ${sweatLitersPerHour.toFixed(2)} L/h × 汗钠 ${SWEAT_SODIUM_MMOL_PER_L.mean} mmol/L（Baker 2016，506 名运动员的均值）${totalText(range.mean)}。这是流失量，不是补充处方`,
+        ),
+        raceItem(
+          "汗钠流失 · 个体范围",
           `${Math.round(range.low)}–${Math.round(range.high)}`,
           "mg/h",
-          `出汗率 ${sweatLitersPerHour.toFixed(2)} L/h（来自上方出汗率）× 全身汗钠 ${SWEAT_SODIUM_MMOL_PER_L.low}–${SWEAT_SODIUM_MMOL_PER_L.high} mmol/L（Baker 2017；均值约 ${SWEAT_SODIUM_MMOL_PER_L.mean}，Baker 2016）${total}。这是流失量，不是补充处方`,
+          `按全身汗钠 ${SWEAT_SODIUM_MMOL_PER_L.low}–${SWEAT_SODIUM_MMOL_PER_L.high} mmol/L（Baker 2017）${
+            hours === null ? "" : `，全程约 ${Math.round(range.low * hours)}–${Math.round(range.high * hours)} mg`
+          }。人与人差好几倍；Baker 2017 认为，按规范采集和解读的汗液检测可以帮助估计个人汗钠流失`,
         ),
       );
     }
@@ -473,79 +614,70 @@ function saltHtml(sweatLitersPerHour: number | null, raceMinutes: number | null,
   return wrap(`<div class="result-goals">${items.join("")}</div>`);
 }
 
+function sweatHtml(): { html: string | null; litersPerHour: number | null } {
+  const fields = {
+    pre: numberField("sw-pre"),
+    post: numberField("sw-post"),
+    minutes: numberField("sw-min"),
+    fluid: numberField("sw-fluid"),
+    urine: numberField("sw-urine"),
+  };
+  const present = (f: { value: number | null; invalid: boolean }): boolean => f.value !== null || f.invalid;
+  if (!present(fields.pre) || !present(fields.post) || !present(fields.minutes)) return { html: null, litersPerHour: null };
+  const block = (body: string): string => `
+      <div class="block">
+        <p class="result-kicker">出汗率</p>
+        ${body}
+      </div>
+    `;
+  if (Object.values(fields).some((f) => f.invalid)) {
+    return { html: block(`<p class="result-method">有数值超出输入框的范围，按输入框下的提示改正后再算。</p>`), litersPerHour: null };
+  }
+  const sweat = sweatTest({
+    preKg: fields.pre.value ?? 0,
+    postKg: fields.post.value ?? 0,
+    fluidL: fields.fluid.value ?? 0,
+    urineL: fields.urine.value ?? 0,
+    minutes: fields.minutes.value ?? 0,
+  });
+  if (!sweat.ok) return { html: block(`<p class="result-method">${sweat.reason}</p>`), litersPerHour: null };
+  return {
+    litersPerHour: sweat.litersPerHour,
+    html: block(`
+        <p class="result-value">${sweat.litersPerHour.toFixed(2)}<small>L/h</small></p>
+        <p class="result-method">（前体重 − 后体重 + 摄入 − 尿量）/ 时间。体重变化 ${sweat.bodyMassChangePct.toFixed(1)}%。超过约 2% 时表现常开始受损。</p>
+      `),
+  };
+}
+
 function render(): void {
   const empty = document.getElementById("fuel-empty");
   const output = document.getElementById("fuel-output");
   if (!empty || !output) return;
 
-  const kg = parseNumber(inputValue("fu-kg"));
-  const parts: string[] = [];
-
-  if (kg !== null && kg > 0) {
-    const caffeine = caffeineDose(kg);
-    const protein = proteinDose(kg);
-    const creatine = creatineDose(kg);
-    const session = carbDuring(parseSession(inputValue("fu-session")));
-    const daily = carbDaily(kg, parseDay(inputValue("fu-day")));
-    parts.push(`
-      <div class="block">
-        <p class="result-kicker">按体重 ${formatKg(kg)} kg</p>
-        <table class="result-table">
-          <thead><tr><th>项目</th><th>剂量</th><th></th></tr></thead>
-          <tbody>
-            <tr><td>咖啡因</td><td class="mono">${formatGrams(caffeine.low)}–${formatGrams(caffeine.high)} mg</td><td>3–6 mg/kg，运动前约 60 分钟（30–90）</td></tr>
-            <tr><td>蛋白 · 耐力</td><td class="mono">${formatGrams(protein.endurance.low)}–${formatGrams(protein.endurance.high)} g/日</td><td>1.2–1.6 g/kg</td></tr>
-            <tr><td>蛋白 · 增肌</td><td class="mono">${formatGrams(protein.hypertrophy.low)}–${formatGrams(protein.hypertrophy.high)} g/日</td><td>1.6–2.2 g/kg</td></tr>
-            <tr><td>肌酸负荷</td><td class="mono">${formatGrams(creatine.loading)} g/日 × 5–7 天</td><td>0.3 g/kg，可分 3–4 次</td></tr>
-            <tr><td>肌酸维持</td><td class="mono">${creatine.maintenanceLow}–${creatine.maintenanceHigh} g/日</td><td>也可跳过负荷、直接维持</td></tr>
-            <tr><td>运动中碳水</td><td class="mono">${
-              session.high === 0 ? "不必额外补糖" : `${session.low}–${session.high} g/h`
-            }</td><td>${session.note}</td></tr>
-            <tr><td>日常碳水</td><td class="mono">${formatGrams(daily.low)}–${formatGrams(daily.high)} g/日</td><td>${daily.note}</td></tr>
-          </tbody>
-        </table>
-      </div>
-    `);
-  }
-
-  const pre = parseNumber(inputValue("sw-pre"));
-  const post = parseNumber(inputValue("sw-post"));
-  const minutes = parseNumber(inputValue("sw-min"));
-  const fluid = parseNumber(inputValue("sw-fluid")) ?? 0;
-  const urine = parseNumber(inputValue("sw-urine")) ?? 0;
-  let sweatLitersPerHour: number | null = null;
-  if (pre !== null && post !== null && minutes !== null) {
-    const sweat = sweatTest({ preKg: pre, postKg: post, fluidL: fluid, urineL: urine, minutes });
-    if (sweat.ok) sweatLitersPerHour = sweat.litersPerHour;
-    parts.push(
-      sweat.ok
-        ? `
-      <div class="block">
-        <p class="result-kicker">出汗率</p>
-        <p class="result-value">${sweat.litersPerHour.toFixed(2)}<small>L/h</small></p>
-        <p class="result-method">（前体重 − 后体重 + 摄入 − 尿量）/ 时间。体重变化 ${sweat.bodyMassChangePct.toFixed(1)}%。超过约 2% 时表现常开始受损。</p>
-      </div>
-    `
-        : `
-      <div class="block">
-        <p class="result-kicker">出汗率</p>
-        <p class="result-method">${sweat.reason}</p>
-      </div>
-    `,
-    );
-  }
-
+  const kg = readNumber("fu-kg");
+  const sweat = sweatHtml();
   const duration = readRaceDuration();
   updateDurationEcho(duration);
-  const race = raceHtml(duration, kg !== null && kg > 0 ? kg : null, sweatLitersPerHour);
-  if (race) parts.push(race.html);
-  const racePlan = race?.plan ?? null;
+  const gel = readGel();
+  const racePlan =
+    duration.status === "valid"
+      ? raceFuelPlan({ minutes: duration.minutes, weightKg: kg, sweatLitersPerHour: sweat.litersPerHour, gelGrams: gel.grams })
+      : null;
+  const race = raceHtml(duration, racePlan, kg, gel.assumed);
 
-  const sugar = sugarHtml(racePlan);
-  if (sugar) parts.push(sugar.html);
+  show("fu-session-hint", racePlan !== null);
+  setText("fu-session-hint", racePlan ? `已填比赛日预计时长：结果里的「运动中碳水」按 ${formatDurationZh(racePlan.minutes)}给出。` : "");
+
+  const sugar = sugarHtml(racePlan, gel.assumed);
   const saltTouched = inputValue("sa-salt") !== "refined";
-  const salt = saltHtml(sweatLitersPerHour, racePlan?.minutes ?? null, sugar?.drinkVolumeL ?? null, saltTouched);
-  if (salt) parts.push(salt);
+  const salt = saltHtml(sweat.litersPerHour, racePlan?.minutes ?? null, sugar?.drinkVolumeL ?? null, saltTouched);
+  const supplements = kg === null ? null : supplementHtml(kg, racePlan);
+
+  const ordered = racePlan
+    ? [race, sweat.html, sugar?.html ?? null, salt, supplements]
+    : [supplements, sweat.html, race, sugar?.html ?? null, salt];
+  const parts = ordered.filter((p): p is string => p !== null);
 
   if (parts.length === 0) {
     empty.hidden = false;

@@ -7,8 +7,11 @@
     <script>
       (function () {
         try {
-          var t = localStorage.getItem("field-lab-theme");
-          var dark = t === "dark";
+          var t = null;
+          try {
+            t = localStorage.getItem("field-lab-theme");
+          } catch (e) {}
+          var dark = t === "dark" || (t !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
           document.documentElement.dataset.theme = dark ? "dark" : "light";
           document.documentElement.style.colorScheme = dark ? "dark" : "light";
         } catch (e) {}
@@ -72,15 +75,16 @@
         <span class="wordmark-zh">训练测算</span>
       </a>
       <nav class="site-nav">
+        <a href="./index.html" aria-current="page">首页</a>
         <a href="./hr.html">心率</a>
         <a href="./threshold.html">阈值</a>
         <a href="./vo2.html">VO₂max</a>
         <a href="./nodevice.html">无设备</a>
+        <a href="./durability.html">脱耦联</a>
         <a href="./function.html">功能</a>
         <a href="./strength.html">力量</a>
         <a href="./critical.html">临界</a>
         <a href="./fuel.html">供能</a>
-        <a href="./durability.html">脱耦联</a>
         <a href="./load.html">训练负荷</a>
       </nav>
     </header>
@@ -104,42 +108,55 @@
         <a class="tool-card" href="./hr.html">
           <div class="tool-card-num">01</div>
           <h2>心率与分区</h2>
-          <p>最大心率、储备心率、Karvonen 五区，以及 LT1/LT2 心率区间。</p>
+          <p class="tool-card-task">跑步心率该控制多少</p>
+          <p>填年龄（再填安静时心率更准），算出最大心率，以及轻松跑、节奏跑、间歇跑各自该在多少心率。</p>
           <div class="meta-row">
             <span class="tag">需要：年龄</span>
-            <span class="tag">Tanaka · Karvonen</span>
+            <span class="tag">Tanaka</span>
+            <span class="tag">Karvonen 五区</span>
+            <span class="tag">LT1 / LT2</span>
           </div>
         </a>
         <a class="tool-card" href="./threshold.html">
           <div class="tool-card-num">02</div>
           <h2>阈值与配速</h2>
-          <p>30 分钟计时赛或比赛成绩反推 LT2，以及用 VDOT 从比赛得到 E/M/T/I 训练配速和其他距离的等效成绩。</p>
+          <p class="tool-card-task">用比赛成绩算训练配速</p>
+          <p>填一场 5 km、10 km、半马或全马成绩，或 30 分钟全力跑，得到轻松跑、马拉松配速、节奏跑、间歇各该跑多快，以及换个距离大概能跑多少。</p>
           <div class="meta-row">
-            <span class="tag">计时赛 · 比赛</span>
-            <span class="tag">VDOT 不是心率</span>
+            <span class="tag">需要：比赛成绩</span>
+            <span class="tag">VDOT</span>
+            <span class="tag">LT2 配速</span>
           </div>
         </a>
         <a class="tool-card" href="./vo2.html">
           <div class="tool-card-num">03</div>
           <h2>VO₂max</h2>
-          <p>Cooper、Rockport、台阶、YMCA 功率车、ACSM 代谢式。按你能完成的测试选。</p>
+          <p class="tool-card-task">我的有氧能力有多好</p>
+          <p>按你能做的测试选：12 分钟跑、1.6 km 快走、台阶、功率车，或球队常用的 Yo-Yo、20 m 往返跑、30-15 间歇测试。有比赛成绩可直接看阈值页 VDOT。</p>
           <div class="meta-row">
-            <span class="tag">按体能选方法</span>
+            <span class="tag">最大摄氧量</span>
+            <span class="tag">Cooper · Rockport</span>
+            <span class="tag">Yo-Yo IR · 30-15 IFT</span>
           </div>
         </a>
         <a class="tool-card" href="./nodevice.html">
           <div class="tool-card-num">04</div>
           <h2>无设备对照</h2>
-          <p>谈话测试、鼻吸与 RPE。没有手表时校准强度。</p>
+          <p class="tool-card-task">没手表怎么判断强度</p>
+          <p>能不能说完整句子、能不能只用鼻子呼吸、自己觉得多累（0–10），对照到心率区，跑步时一看就会。</p>
           <div class="meta-row">
-            <span class="tag">谈话测试 · Reed &amp; Pipe 2014</span>
+            <span class="tag">谈话测试</span>
+            <span class="tag">RPE CR-10</span>
+            <span class="tag">Reed &amp; Pipe 2014</span>
           </div>
         </a>
         <a class="tool-card" href="./durability.html">
           <div class="tool-card-num">05</div>
           <h2>心率脱耦联</h2>
-          <p>前半 vs 后半的心率相对配速或功率，监测有氧耐久性。</p>
+          <p class="tool-card-task">长跑后半程心率漂移</p>
+          <p>同样配速（或功率）下，后半程心率比前半程高了多少，看有氧耐力撑不撑得住长时间。</p>
           <div class="meta-row">
+            <span class="tag">Pa:HR 脱耦联</span>
             <span class="tag">Jones 2024</span>
             <span class="tag">约 5% 作注意线</span>
           </div>
@@ -152,10 +169,12 @@
         <a class="tool-card" href="./function.html">
           <div class="tool-card-num">06</div>
           <h2>步行与基础功能</h2>
-          <p>6 分钟步行、常速、5 次起坐、TUG（Timed Up and Go）、握力，以及 SPPB 0–12 分。给老年人或低体能的现场筛查，不是 VO₂max。</p>
+          <p class="tool-card-task">给长辈做体能筛查</p>
+          <p>站立平衡、4 米走路、5 次起坐、起身绕行、握力和 6 分钟步行，在家或社区就能做，看哪项需要多留意。是筛查，不是诊断。</p>
           <div class="meta-row">
+            <span class="tag">SPPB 0–12 分</span>
+            <span class="tag">TUG · 6MWT</span>
             <span class="tag">AWGS 2019</span>
-            <span class="tag">筛查不是诊断</span>
           </div>
         </a>
       </section>
@@ -166,9 +185,12 @@
         <a class="tool-card" href="./strength.html">
           <div class="tool-card-num">07</div>
           <h2>1RM 与负荷</h2>
-          <p>Epley / Brzycki 估算 1RM，按 ACSM 2026 给出最大力量、增肌、爆发力区间，并附 RIR 量表。</p>
+          <p class="tool-card-task">练力量该用多重</p>
+          <p>填一组做了多少重量、做了几次，估出最多能举多重，再给出练力量、增肌、爆发力各该用的重量和次数。</p>
           <div class="meta-row">
             <span class="tag">需要：重量 × 次数</span>
+            <span class="tag">Epley · Brzycki</span>
+            <span class="tag">RIR</span>
             <span class="tag">ACSM 2026</span>
           </div>
         </a>
@@ -180,10 +202,13 @@
         <a class="tool-card" href="./critical.html">
           <div class="tool-card-num">08</div>
           <h2>临界功率与临界速度</h2>
-          <p>骑行 CP、FTP 近似、跑步 CS、游泳 CSS，以及按 W′ 平衡设计骑行间歇。骑跑游不能互换。</p>
+          <p class="tool-card-task">骑车、跑步、游泳能撑多久的强度</p>
+          <p>用两三次不同长度的全力测试，算出能长时间维持的功率、配速或游速，再按它安排骑行间歇。骑跑游不能互换。</p>
           <div class="meta-row">
-            <span class="tag">Jones / Vanhatalo</span>
-            <span class="tag">Wakayoshi CSS</span>
+            <span class="tag">CP · W′</span>
+            <span class="tag">FTP 近似</span>
+            <span class="tag">跑步 CS</span>
+            <span class="tag">游泳 CSS</span>
           </div>
         </a>
       </section>
@@ -194,10 +219,12 @@
         <a class="tool-card" href="./fuel.html">
           <div class="tool-card-num">09</div>
           <h2>供能、补剂与出汗率</h2>
-          <p>咖啡因、蛋白、肌酸、碳水区间，以及体重差法出汗率。</p>
+          <p class="tool-card-task">一天吃多少蛋白、比赛日补给、自制胶和盐丸</p>
+          <p>按体重算蛋白、碳水、咖啡因、肌酸用量；比赛中每小时补多少碳水和盐；自己冲运动饮料、做能量胶和盐丸怎么配；称体重算出汗量。</p>
           <div class="meta-row">
-            <span class="tag">ISSN</span>
             <span class="tag">需要：体重</span>
+            <span class="tag">ISSN</span>
+            <span class="tag">出汗率</span>
           </div>
         </a>
       </section>
@@ -208,10 +235,12 @@
         <a class="tool-card" href="./load.html">
           <div class="tool-card-num">10</div>
           <h2>训练负荷</h2>
-          <p>每次课 RPE × 分钟，得到一周负荷、单调度和应变。不需要手表，团队和个人都能用。</p>
+          <p class="tool-card-task">这周练得是不是太多、太单调</p>
+          <p>每次练完记一下有多累（0–10）和练了多少分钟，算出一周总负荷，以及安排是不是太单调。不需要手表，个人和带队都能用。</p>
           <div class="meta-row">
+            <span class="tag">session-RPE</span>
+            <span class="tag">单调度 · 应变</span>
             <span class="tag">Foster 2001</span>
-            <span class="tag">需要：RPE × 时长</span>
           </div>
         </a>
       </section>

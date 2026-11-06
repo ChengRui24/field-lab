@@ -7,8 +7,11 @@
     <script>
       (function () {
         try {
-          var t = localStorage.getItem("field-lab-theme");
-          var dark = t === "dark";
+          var t = null;
+          try {
+            t = localStorage.getItem("field-lab-theme");
+          } catch (e) {}
+          var dark = t === "dark" || (t !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
           document.documentElement.dataset.theme = dark ? "dark" : "light";
           document.documentElement.style.colorScheme = dark ? "dark" : "light";
         } catch (e) {}
@@ -38,15 +41,16 @@
         <span class="wordmark-zh">训练测算</span>
       </a>
       <nav class="site-nav">
+        <a href="./index.html">首页</a>
         <a href="./hr.html">心率</a>
         <a href="./threshold.html">阈值</a>
         <a href="./vo2.html">VO₂max</a>
         <a href="./nodevice.html">无设备</a>
+        <a href="./durability.html">脱耦联</a>
         <a href="./function.html">功能</a>
         <a href="./strength.html">力量</a>
-        <a href="./critical.html">临界</a>
+        <a href="./critical.html" aria-current="page">临界</a>
         <a href="./fuel.html">供能</a>
-        <a href="./durability.html">脱耦联</a>
         <a href="./load.html">训练负荷</a>
       </nav>
     </header>
@@ -56,48 +60,6 @@
       <p class="lead">
         骑行用功率，跑步用速度，游泳用临界游速。三者不能互换。FTP（functional threshold power，功能阈值功率）只作常用近似，不是临界功率。
       </p>
-      <table class="method-table">
-        <thead>
-          <tr>
-            <th>方法</th>
-            <th>做法</th>
-            <th>得到</th>
-            <th>注意</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="recommend">临界功率 CP（critical power）</td>
-            <td>2–3 次 2–15 分钟全力，线性拟合：P = CP + W′ / t</td>
-            <td>重度 / 严重强度域边界；W′（W prime）为可动用功</td>
-            <td>Jones / Vanhatalo。骑行功率不能套到跑步</td>
-          </tr>
-          <tr>
-            <td>FTP</td>
-            <td>20 分钟全力平均功率 × 0.95</td>
-            <td>约 1 小时可持续功率的常用近似</td>
-            <td>Allen / Coggan 操作定义，不是 CP</td>
-          </tr>
-          <tr>
-            <td>W′ 平衡（W′bal）</td>
-            <td>Skiba 积分模型：高于 CP 消耗 W′，低于 CP 按 τ = 546·e<sup>−0.01·DCP</sup> + 316 s 指数恢复，DCP = CP − 歇时功率</td>
-            <td>间歇中每组做完 / 歇完剩多少 W′，第几组耗尽</td>
-            <td>Skiba 2012。τ 是 7 名骑手的组均值，个体恢复快慢不同。只用于骑行</td>
-          </tr>
-          <tr>
-            <td>临界速度 CS（critical speed）</td>
-            <td>两次不同距离全力，v = CS + D′ / t</td>
-            <td>跑步速度域边界；D′（D prime）为可动用距离</td>
-            <td>与 CP 同构，但用速度。不要和骑行瓦数互换</td>
-          </tr>
-          <tr>
-            <td>临界游速 CSS（critical swim speed）</td>
-            <td>Wakayoshi：200 m 与 400 m 全力，CSS = 200 / (T400 − T200)</td>
-            <td>米/秒，可换算成 /100 m</td>
-            <td>场地测试，与跑步配速分开</td>
-          </tr>
-        </tbody>
-      </table>
       <div class="workbench">
         <form class="panel stack" id="cp-form" autocomplete="off">
           <div class="block">
@@ -114,7 +76,7 @@
             </div>
             <div class="field">
               <label for="cp-p1">测试 1 平均功率（W）</label>
-              <input id="cp-p1" type="number" inputmode="numeric" min="50" max="2000" step="1" />
+              <input id="cp-p1" type="number" inputmode="numeric" min="50" max="1000" step="1" />
             </div>
             <div class="field">
               <label for="cp-t2">测试 2 时间（分:秒）</label>
@@ -122,7 +84,7 @@
             </div>
             <div class="field">
               <label for="cp-p2">测试 2 平均功率（W）</label>
-              <input id="cp-p2" type="number" inputmode="numeric" min="50" max="2000" step="1" />
+              <input id="cp-p2" type="number" inputmode="numeric" min="50" max="1000" step="1" />
             </div>
             <div class="field">
               <label for="cp-t3">测试 3 时间（分:秒，可选）</label>
@@ -130,7 +92,7 @@
             </div>
             <div class="field">
               <label for="cp-p3">测试 3 平均功率（W，可选）</label>
-              <input id="cp-p3" type="number" inputmode="numeric" min="50" max="2000" step="1" />
+              <input id="cp-p3" type="number" inputmode="numeric" min="50" max="1000" step="1" />
             </div>
           </div>
           <div class="block">
@@ -138,7 +100,7 @@
             <p class="protocol">只适用于骑行。填一组间歇的功率和做 / 歇时长，看 W′ 能撑几组。</p>
             <div class="field">
               <label for="wb-cp">CP（W）</label>
-              <input id="wb-cp" type="number" inputmode="numeric" min="50" max="2000" step="1" data-persist="cp" placeholder="上方测试自动填入" />
+              <input id="wb-cp" type="number" inputmode="numeric" min="50" max="700" step="1" data-persist="cp" placeholder="上方测试自动填入" />
             </div>
             <div class="field">
               <label for="wb-wprime">W′（kJ）</label>
@@ -148,7 +110,7 @@
             <p class="field-note" id="wb-source-note" hidden></p>
             <div class="field">
               <label for="wb-power">间歇功率（W）</label>
-              <input id="wb-power" type="number" inputmode="numeric" min="50" max="2000" step="1" />
+              <input id="wb-power" type="number" inputmode="numeric" min="50" max="1500" step="1" />
             </div>
             <div class="field">
               <label for="wb-work">每组做（分:秒）</label>
@@ -160,7 +122,7 @@
             </div>
             <div class="field">
               <label for="wb-rest-power">歇时功率（W，可选）</label>
-              <input id="wb-rest-power" type="number" inputmode="numeric" min="0" max="2000" step="1" placeholder="留空按 CP 的一半" />
+              <input id="wb-rest-power" type="number" inputmode="numeric" min="0" max="700" step="1" placeholder="留空按 CP 的一半" />
             </div>
             <div class="field">
               <label for="wb-reps">计划组数（可选）</label>
@@ -176,7 +138,7 @@
             </ol>
             <div class="field">
               <label for="ftp-20">20 分钟平均功率（W）</label>
-              <input id="ftp-20" type="number" inputmode="numeric" min="50" max="2000" step="1" />
+              <input id="ftp-20" type="number" inputmode="numeric" min="50" max="700" step="1" />
             </div>
           </div>
           <div class="block">
@@ -188,7 +150,7 @@
             </ol>
             <div class="field">
               <label for="cs-d1">距离 1（m）</label>
-              <input id="cs-d1" type="number" inputmode="decimal" min="400" max="10000" step="1" placeholder="1200" />
+              <input id="cs-d1" type="number" inputmode="decimal" min="400" max="5000" step="1" placeholder="1200" />
             </div>
             <div class="field">
               <label for="cs-t1">成绩 1（分:秒）</label>
@@ -196,7 +158,7 @@
             </div>
             <div class="field">
               <label for="cs-d2">距离 2（m）</label>
-              <input id="cs-d2" type="number" inputmode="decimal" min="400" max="21097" step="1" placeholder="3000" />
+              <input id="cs-d2" type="number" inputmode="decimal" min="400" max="10000" step="1" placeholder="3000" />
             </div>
             <div class="field">
               <label for="cs-t2">成绩 2（分:秒）</label>
@@ -226,6 +188,51 @@
           <div id="cp-output" hidden></div>
         </div>
       </div>
+      <details class="method-details">
+        <summary>方法与精度</summary>
+        <table class="method-table">
+          <thead>
+            <tr>
+              <th>方法</th>
+              <th>做法</th>
+              <th>得到</th>
+              <th>注意</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="recommend">临界功率 CP（critical power）</td>
+              <td>2–3 次 2–15 分钟全力，线性拟合：P = CP + W′ / t</td>
+              <td>重度 / 严重强度域边界；W′（W prime）为可动用功</td>
+              <td>Jones / Vanhatalo。骑行功率不能套到跑步</td>
+            </tr>
+            <tr>
+              <td>FTP</td>
+              <td>20 分钟全力平均功率 × 0.95</td>
+              <td>约 1 小时可持续功率的常用近似</td>
+              <td>Allen / Coggan 操作定义，不是 CP</td>
+            </tr>
+            <tr>
+              <td>W′ 平衡（W′bal）</td>
+              <td>Skiba 积分模型：高于 CP 消耗 W′，低于 CP 按 τ = 546·e<sup>−0.01·DCP</sup> + 316 s 指数恢复，DCP = CP − 歇时功率</td>
+              <td>间歇中每组做完 / 歇完剩多少 W′，第几组耗尽</td>
+              <td>Skiba 2012。τ 是 7 名骑手的组均值，个体恢复快慢不同。只用于骑行</td>
+            </tr>
+            <tr>
+              <td>临界速度 CS（critical speed）</td>
+              <td>两次不同距离全力，v = CS + D′ / t</td>
+              <td>跑步速度域边界；D′（D prime）为可动用距离</td>
+              <td>与 CP 同构，但用速度。不要和骑行瓦数互换</td>
+            </tr>
+            <tr>
+              <td>临界游速 CSS（critical swim speed）</td>
+              <td>Wakayoshi：200 m 与 400 m 全力，CSS = 200 / (T400 − T200)</td>
+              <td>米/秒，可换算成 /100 m</td>
+              <td>场地测试，与跑步配速分开</td>
+            </tr>
+          </tbody>
+        </table>
+      </details>
       <section class="notes">
         <h2>注意事项</h2>
         <ol>

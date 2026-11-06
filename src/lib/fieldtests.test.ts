@@ -11,6 +11,7 @@ describe("Yo-Yo IR (Bangsbo 2008)", () => {
   it("IR1: distance × 0.0084 + 36.4", () => {
     expect(yoyoVo2("ir1", 2000)).toBeCloseTo(53.2, 6);
     expect(yoyoVo2("ir1", 1000)).toBeCloseTo(44.8, 6);
+    expect(yoyoVo2("ir1", 1840)).toBeCloseTo(51.856, 6);
   });
 
   it("IR2: distance × 0.0136 + 45.3", () => {
@@ -64,6 +65,14 @@ describe("30-15 IFT (Buchheit)", () => {
     expect(ift3015Vo2({ viftKmh: 19, age: 25, sex: "male", weightKg: 75 })).toBeCloseTo(52.3525, 4);
     // Female (G = 2) is 2.15 lower.
     expect(ift3015Vo2({ viftKmh: 19, age: 25, sex: "female", weightKg: 75 })).toBeCloseTo(50.2025, 4);
+  });
+
+  it("depends on the player's own age, sex and weight", () => {
+    // Last line: B's VIFT 20.5 with C's profile (15 y, female, 52 kg) is 50.2, not B's 55.6.
+    expect(ift3015Vo2({ viftKmh: 19.5, age: 16, sex: "male", weightKg: 62 })).toBeCloseTo(50.4488, 4);
+    expect(ift3015Vo2({ viftKmh: 20.5, age: 24, sex: "male", weightKg: 75 })).toBeCloseTo(55.6347, 4);
+    expect(ift3015Vo2({ viftKmh: 17, age: 15, sex: "female", weightKg: 52 })).toBeCloseTo(43.4816, 4);
+    expect(ift3015Vo2({ viftKmh: 20.5, age: 15, sex: "female", weightKg: 52 })).toBeCloseTo(50.1631, 4);
   });
 
   it("rejects invalid inputs", () => {

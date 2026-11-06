@@ -6,6 +6,14 @@ export const RACE_METERS: Record<RaceDistance, number> = {
   full: 42195,
 };
 
+/** Race-back only covers 10K and longer; 5 km and unknown distances return null. */
+export function raceDistanceFromMeters(meters: number): RaceDistance | null {
+  for (const key of Object.keys(RACE_METERS) as RaceDistance[]) {
+    if (Math.abs(RACE_METERS[key] - meters) < 1) return key;
+  }
+  return null;
+}
+
 export function assertNever(value: never): never {
   throw new Error(`未处理的分支: ${String(value)}`);
 }
@@ -40,7 +48,7 @@ export function raceToLt2Pace(distance: RaceDistance, raceSecPerKm: number): {
       return {
         faster: raceSecPerKm - 15,
         slower: raceSecPerKm - 10,
-        note: "全马慢于 LT2，配速减 10–15 秒/km",
+        note: "全马慢于 LT2，配速减 10–15 秒/km（经验规则）",
       };
     default:
       return assertNever(distance);

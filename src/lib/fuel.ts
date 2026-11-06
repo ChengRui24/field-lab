@@ -1,4 +1,4 @@
-import { resolveIngredient, type IngredientId, type RecipePart } from "./diyfuel";
+import { CONCENTRATED_PCT, resolveIngredient, type IngredientId, type RecipePart } from "./diyfuel";
 
 export function caffeineDose(weightKg: number): { low: number; high: number } {
   return { low: 3 * weightKg, high: 6 * weightKg };
@@ -236,6 +236,92 @@ export function raceCarbMidpoint(plan: RaceFuelPlan | null): number | null {
   return (plan.during.lowTotal + plan.during.highTotal) / 2;
 }
 
+/** 「按体重」表里的运动中碳水：填了有效比赛时长时跟随比赛日补给，避免两处数字矛盾。 */
+export function duringCarbRow(session: CarbSession, plan: RaceFuelPlan | null): { text: string; note: string; fromRace: boolean } {
+  if (plan) {
+    const d = plan.during;
+    switch (d.band) {
+      case "none":
+        return { text: "不必额外补糖", note: "按比赛日预计时长：不足 45 分钟，赛前吃好即可", fromRace: true };
+      case "rinse":
+        return { text: "少量 / 含漱", note: "按比赛日预计时长：45–75 分钟，少量运动饮料或含漱", fromRace: true };
+      case "moderate":
+      case "high":
+        return { text: `${d.lowPerHour}–${d.highPerHour} g/h`, note: "按比赛日预计时长，详见比赛日补给。ACSM/AND/DC 2016（Thomas）表 2", fromRace: true };
+      default: {
+        const exhaustive: never = d.band;
+        throw new Error(`未处理的时长档: ${String(exhaustive)}`);
+      }
+    }
+  }
+  const s = carbDuring(session);
+  return { text: s.high === 0 ? "不必额外补糖" : `${s.low}–${s.high} g/h`, note: s.note, fromRace: false };
+}
+
+/**
+ * 每份碳水超过此值时提示「比常见市售能量胶大」。产品标签观察（非文献推荐值）：
+ * 常见单支约 20–30 g 碳水，高碳款约 40 g。
+ */
+export const LARGE_GEL_CARB_G = 40;
+
+/** 碳水浓度超过 CONCENTRATED_PCT 视为自制胶，按「做几支 × 每支碳水」规划。 */
+export function isGelConcentration(concentrationPct: number): boolean {
+  return concentrationPct > CONCENTRATED_PCT + 1e-9;
+}
+
+export type DiyCarbTarget =
+  | { mode: "drink"; carbGrams: number; totalSource: "user" | "race"; servings: number | null }
+  | {
+      mode: "gel";
+      carbGrams: number;
+      count: number;
+      countSource: "user" | "race";
+      perGelCarbG: number;
+      perGelSource: "user" | "race" | "default";
+      largerThanCommercial: boolean;
+    }
+  | { mode: "drink"; carbGrams: null; missing: "total" }
+  | { mode: "gel"; carbGrams: null; missing: "count" }
+  | { mode: "drink" | "gel"; carbGrams: null; missing: "badServings" };
+
+/**
+ * 自制补给的总碳水。饮料浓度：用户填的总碳水，留空取比赛日全程中点。
+ * 胶浓度：做几支（留空取比赛日能量胶支数下限）× 每支碳水（留空取比赛日每支能量胶克数，再不行 25 g）。
+ */
+export function diyCarbTarget(args: {
+  concentrationPct: number;
+  totalCarbG: number | null;
+  servings: number | null;
+  perGelCarbG: number | null;
+  plan: RaceFuelPlan | null;
+}): DiyCarbTarget {
+  const servings = args.servings;
+  const servingsOk = servings === null || (Number.isInteger(servings) && servings >= 1);
+  if (!isGelConcentration(args.concentrationPct)) {
+    if (!servingsOk) return { mode: "drink", carbGrams: null, missing: "badServings" };
+    const user = args.totalCarbG !== null && args.totalCarbG > 0 ? args.totalCarbG : null;
+    const total = user ?? raceCarbMidpoint(args.plan);
+    if (total === null) return { mode: "drink", carbGrams: null, missing: "total" };
+    return { mode: "drink", carbGrams: total, totalSource: user !== null ? "user" : "race", servings };
+  }
+  if (!servingsOk) return { mode: "gel", carbGrams: null, missing: "badServings" };
+  const raceGels = args.plan?.during.gels ?? null;
+  const count = servings ?? raceGels?.countLow ?? null;
+  if (count === null) return { mode: "gel", carbGrams: null, missing: "count" };
+  const userPer = args.perGelCarbG !== null && args.perGelCarbG > 0 ? args.perGelCarbG : null;
+  const perGelCarbG = userPer ?? raceGels?.gramsPerGel ?? DEFAULT_GEL_GRAMS;
+  const perGelSource = userPer !== null ? "user" : raceGels ? "race" : "default";
+  return {
+    mode: "gel",
+    carbGrams: count * perGelCarbG,
+    count,
+    countSource: servings !== null ? "user" : "race",
+    perGelCarbG,
+    perGelSource,
+    largerThanCommercial: perGelCarbG > LARGE_GEL_CARB_G,
+  };
+}
+
 export function sweatRateLitersPerHour(args: {
   preKg: number;
   postKg: number;
@@ -246,6 +332,9 @@ export function sweatRateLitersPerHour(args: {
   const loss = args.preKg - args.postKg + args.fluidL - args.urineL;
   return loss / args.hours;
 }
+
+/** 数据核对阈值（与 diyfuel 汗钠计算的上限一致），不是生理极限。 */
+export const MAX_PLAUSIBLE_SWEAT_L_PER_H = 6;
 
 export type SweatResult =
   | { ok: true; litersPerHour: number; bodyMassChangePct: number }
@@ -272,6 +361,12 @@ export function sweatTest(args: {
   });
   if (litersPerHour < 0) {
     return { ok: false, reason: "数据矛盾，请核对：算出的出汗量为负（体重增加超过了喝进去的量）。" };
+  }
+  if (litersPerHour > MAX_PLAUSIBLE_SWEAT_L_PER_H) {
+    return {
+      ok: false,
+      reason: `算出的出汗率超过 ${MAX_PLAUSIBLE_SWEAT_L_PER_H} L/h，远高于文献报告（Baker 2017：通常约 0.5–2 L/h，超过 3 L/h 少见），请核对体重、饮水和时间。`,
+    };
   }
   return {
     ok: true,

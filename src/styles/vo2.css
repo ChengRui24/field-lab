@@ -1,0 +1,153 @@
+.vo2-race {
+  margin: 0 0 20px;
+}
+
+.vo2-race {
+  padding: 14px 18px;
+}
+
+.vo2-race .protocol {
+  margin: 0;
+}
+
+.vo2-race strong {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.vo2-race a,
+.lead a {
+  color: var(--accent);
+}
+
+.vo2-jump {
+  margin: 0 0 20px;
+}
+
+.vo2-jump p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+}
+
+.vo2-jump-label {
+  min-width: 5em;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.vo2-jump a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--rule);
+  border-radius: 980px;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.vo2-jump a:hover {
+  background: var(--hover);
+}
+
+.vo2-jump a:focus-visible,
+.vo2-steps summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.vo2-bench {
+  margin: 0 0 28px;
+}
+
+.vo2-profile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 10px 0 10px 12px;
+  border-left: 2px solid var(--caution);
+}
+
+.vo2-profile[hidden] {
+  display: none;
+}
+
+.vo2-profile-text {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.vo2-test {
+  scroll-margin-top: 16px;
+}
+
+.vo2-steps {
+  margin: 0 0 14px;
+}
+
+.vo2-steps summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.vo2-steps:not([open]) summary {
+  margin-bottom: 0;
+}
+
+.vo2-result {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
+}
+
+.vo2-result > :last-child {
+  margin-bottom: 0;
+}
+
+.vo2-result .result-empty {
+  margin: 0;
+}
+
+.vo2-minor {
+  font-size: 28px;
+  color: var(--text-2);
+}
+
+@media (min-width: 861px) {
+  .vo2-test {
+    display: grid;
+    grid-template-columns: 400px minmax(0, 1fr);
+    gap: 0 28px;
+    align-items: start;
+  }
+
+  .vo2-result {
+    position: sticky;
+    top: 16px;
+    margin-top: 0;
+    padding: 0 0 0 28px;
+    border-top: none;
+    border-left: 1px solid var(--rule);
+  }
+}
+
+@media (pointer: coarse) {
+  .vo2-jump a {
+    min-height: 44px;
+  }
+
+  .vo2-steps summary {
+    padding: 12px 0;
+    margin-bottom: 0;
+  }
+}

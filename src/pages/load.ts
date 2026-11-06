@@ -1,7 +1,7 @@
 import "../styles/base.css";
 import { initChrome } from "../chrome";
 import { bindForm, readNumber } from "../lib/dom";
-import { MONOTONY_FLAG, isHighMonotony, readDay, weekSummary, type DayEntry } from "../lib/load";
+import { MONOTONY_FLAG, isHighMonotony, readDay, weekdayLabel, weekSummary, type DayEntry } from "../lib/load";
 
 const DAYS = [1, 2, 3, 4, 5, 6, 7];
 
@@ -58,7 +58,7 @@ function render(): void {
   if (sessions.length === 1) {
     const s = sessions[0];
     output.innerHTML = `
-    <p class="result-kicker">第 ${s.day} 天 · 单次课负荷</p>
+    <p class="result-kicker">${weekdayLabel(s.day)} · 单次课负荷</p>
     <p class="result-value">${formatAu(s.load)}<small>AU</small></p>
     <p class="result-method">RPE ${formatNumber(s.rpe)} × ${formatNumber(s.minutes)} 分钟。再记至少一天，就能看本周负荷、单调度与应变。</p>
   `;
@@ -93,13 +93,14 @@ function render(): void {
         : entry.status === "error"
           ? "未计入"
           : "休息";
-    return `<tr><td>第 ${day} 天</td><td>${detail}</td><td class="mono">${formatAu(daily[index])}</td></tr>`;
+    return `<tr><td>${weekdayLabel(day)}</td><td>${detail}</td><td class="mono">${formatAu(daily[index])}</td></tr>`;
   }).join("");
 
   output.innerHTML = `
     <p class="result-kicker">本周负荷 · ${sessions.length} 次课、${restDays} 天按 0 计</p>
     <p class="result-value">${formatAu(week.total)}<small>AU</small></p>
     <p class="result-method">${reading}</p>
+    <p class="result-method">怎么用：把这周的周负荷和应变记下来，跟这名队员自己前几周比，不跟别人比。要留意的是周与周之间的大幅跳升，以及单调度偏高；排课时让难的日子和轻松日、休息日交替。</p>
     <table class="result-table">
       <tbody>
         <tr><td>日均负荷</td><td class="mono">${formatAu(week.mean)} AU</td></tr>
@@ -110,25 +111,65 @@ function render(): void {
     </table>
     <h3 class="result-section">每天</h3>
     <table class="result-table">
-      <thead><tr><th>日</th><th>RPE × 分钟</th><th>负荷 AU</th></tr></thead>
+      <thead><tr><th>星期</th><th>RPE × 分钟</th><th>负荷 AU</th></tr></thead>
       <tbody>${dayRows}</tbody>
     </table>
   `;
 }
 
+const UNDO_MS = 8000;
+
+function weekInputs(): HTMLInputElement[] {
+  return DAYS.flatMap((day) => {
+    const ids = fieldIds(day);
+    return [ids.rpe, ids.minutes].flatMap((id) => {
+      const input = document.getElementById(id);
+      return input instanceof HTMLInputElement ? [input] : [];
+    });
+  });
+}
+
+function setWeek(inputs: HTMLInputElement[], values: string[]): void {
+  inputs.forEach((input, index) => {
+    input.value = values[index] ?? "";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+}
+
 function initClearWeek(): void {
   const button = document.getElementById("load-clear");
-  if (!button) return;
+  const undo = document.getElementById("load-undo");
+  const undoButton = document.getElementById("load-undo-btn");
+  if (!button || !undo || !undoButton) return;
+  let saved: string[] | null = null;
+  let timer: number | undefined;
+
+  const hideUndo = (): void => {
+    window.clearTimeout(timer);
+    saved = null;
+    undo.hidden = true;
+  };
+
   button.addEventListener("click", () => {
-    for (const day of DAYS) {
-      const ids = fieldIds(day);
-      for (const id of [ids.rpe, ids.minutes]) {
-        const input = document.getElementById(id);
-        if (!(input instanceof HTMLInputElement)) continue;
-        input.value = "";
-        input.dispatchEvent(new Event("input", { bubbles: true }));
-      }
-    }
+    const inputs = weekInputs();
+    const values = inputs.map((input) => input.value);
+    if (values.every((value) => value === "")) return;
+    saved = values;
+    setWeek(inputs, []);
+    undo.hidden = false;
+    window.clearTimeout(timer);
+    timer = window.setTimeout(hideUndo, UNDO_MS);
+  });
+
+  // Typing after a clear starts a new week; undo would overwrite it.
+  document.getElementById("load-form")?.addEventListener("input", (event) => {
+    if (event.isTrusted && saved) hideUndo();
+  });
+
+  undoButton.addEventListener("click", () => {
+    if (saved) setWeek(weekInputs(), saved);
+    hideUndo();
+    button.focus();
   });
 }
 
