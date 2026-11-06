@@ -1,5 +1,6 @@
 import { initTheme } from "./theme";
 import { initSeo } from "./seo";
+import { clearPersisted } from "./lib/dom";
 
 export type PageId =
   | "home"
@@ -25,6 +26,63 @@ const LINKS: { id: PageId; href: string; label: string }[] = [
   { id: "durability", href: "./durability.html", label: "脱耦联" },
 ];
 
+const SINGLE_COLUMN = "(max-width: 860px)";
+
+function initClearData(): void {
+  const footer = document.querySelector(".site-footer");
+  if (!(footer instanceof HTMLElement)) return;
+  if (footer.querySelector(".clear-data")) return;
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "clear-data";
+  button.textContent = "清除已记住的数据";
+  button.title = "清除本机记住的年龄、性别、体重、身高与心率";
+  button.addEventListener("click", () => {
+    clearPersisted();
+    window.location.reload();
+  });
+  footer.appendChild(button);
+}
+
+// On a single-column layout the results panel sits below every input block, so a
+// live update is easy to miss; offer a jump while results exist but are off-screen below.
+function initResultsJump(): void {
+  const results = document.querySelector(".workbench .panel.results");
+  if (!(results instanceof HTMLElement)) return;
+  const empty = results.querySelector(".result-empty");
+  if (!(empty instanceof HTMLElement)) return;
+  if (!("IntersectionObserver" in window)) return;
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "results-jump";
+  button.textContent = "查看结果 ↓";
+  button.hidden = true;
+  document.body.appendChild(button);
+
+  const singleColumn = window.matchMedia(SINGLE_COLUMN);
+  let resultsBelow = false;
+  const update = (): void => {
+    button.hidden = !(singleColumn.matches && resultsBelow && empty.hidden);
+  };
+
+  new IntersectionObserver(([entry]) => {
+    if (!entry) return;
+    resultsBelow = !entry.isIntersecting && entry.boundingClientRect.top > 0;
+    update();
+  }).observe(results);
+  new MutationObserver(update).observe(empty, { attributes: true, attributeFilter: ["hidden"] });
+  singleColumn.addEventListener("change", update);
+
+  button.addEventListener("click", () => {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    results.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+    if (!results.hasAttribute("tabindex")) results.tabIndex = -1;
+    results.focus({ preventScroll: true });
+  });
+}
+
 export function initChrome(current: PageId): void {
   const nav = document.querySelector(".site-nav");
   if (nav instanceof HTMLElement) {
@@ -35,4 +93,6 @@ export function initChrome(current: PageId): void {
   }
   initTheme();
   initSeo();
+  initClearData();
+  initResultsJump();
 }
