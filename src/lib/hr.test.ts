@@ -5,8 +5,8 @@ import {
   gulatiRangeNote,
   hrrToHrMaxFraction,
   karvonen,
-  LT1_REFERENCE_REST_RATIO,
   LT_COEFFICIENTS,
+  REFERENCE_REST_RATIO,
   restingHrProblem,
   selectedHrMax,
   tanakaHrMax,
@@ -52,9 +52,14 @@ describe("Karvonen", () => {
 describe("LT coefficients are internally consistent", () => {
   for (const group of ["untrained", "trained"] as const) {
     const c = LT_COEFFICIENTS[group];
-    it(`${group}: LT1 %HRmax matches LT1 %HRR at the reference RHR ratio`, () => {
-      expect(c.lt1HrMax.low).toBeCloseTo(hrrToHrMaxFraction(c.lt1Karvonen.low, LT1_REFERENCE_REST_RATIO), 1);
-      expect(c.lt1HrMax.high).toBeCloseTo(hrrToHrMaxFraction(c.lt1Karvonen.high, LT1_REFERENCE_REST_RATIO), 1);
+    it(`${group}: %HRmax bands equal the %HRR bands at the reference RHR ratio`, () => {
+      const ratio = REFERENCE_REST_RATIO[group];
+      for (const lt of ["lt1", "lt2"] as const) {
+        const hrr = c[`${lt}Karvonen`];
+        const hrMax = c[`${lt}HrMax`];
+        expect(Math.abs(hrMax.low - hrrToHrMaxFraction(hrr.low, ratio))).toBeLessThanOrEqual(0.0051);
+        expect(Math.abs(hrMax.high - hrrToHrMaxFraction(hrr.high, ratio))).toBeLessThanOrEqual(0.0051);
+      }
     });
     it(`${group}: LT1 below LT2 in both representations`, () => {
       expect(c.lt1Karvonen.high).toBeLessThan(c.lt2Karvonen.low);

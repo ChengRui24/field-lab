@@ -57,11 +57,8 @@ function ltBlock(hrMax: number, resting: number | null): string {
   const untrained = LT_COEFFICIENTS.untrained;
   const trained = LT_COEFFICIENTS.trained;
 
-  const hrMaxLt1 = formatBpmRange(hrMax * untrained.lt1HrMax.low, hrMax * untrained.lt1HrMax.high);
-  const untrainedLt2HrMax = formatBpmRange(hrMax * untrained.lt2HrMax.low, hrMax * untrained.lt2HrMax.high);
-  const trainedLt2HrMax = formatBpmRange(hrMax * trained.lt2HrMax.low, hrMax * trained.lt2HrMax.high);
-
   if (resting === null) {
+    const band = (b: { low: number; high: number }) => formatBpmRange(hrMax * b.low, hrMax * b.high);
     return `
       <p class="result-kicker">LT1 / LT2 心率 · %HRmax 对照（经验估计）</p>
       <table class="result-table">
@@ -69,11 +66,11 @@ function ltBlock(hrMax: number, resting: number | null): string {
           <tr><th></th><th>无运动习惯</th><th>有训练习惯</th></tr>
         </thead>
         <tbody>
-          <tr><td>LT1</td><td class="mono">${hrMaxLt1}</td><td class="mono">${hrMaxLt1}</td></tr>
-          <tr><td>LT2</td><td class="mono">${untrainedLt2HrMax}</td><td class="mono">${trainedLt2HrMax}</td></tr>
+          <tr><td>LT1</td><td class="mono">${band(untrained.lt1HrMax)}</td><td class="mono">${band(trained.lt1HrMax)}</td></tr>
+          <tr><td>LT2</td><td class="mono">${band(untrained.lt2HrMax)}</td><td class="mono">${band(trained.lt2HrMax)}</td></tr>
         </tbody>
       </table>
-      <p class="result-method">未填静息心率，上表为 %HRmax。LT1 / LT2 系数为经验估计，无单一文献出处。补测晨脉后改为 Karvonen，训练者务必如此。</p>
+      <p class="result-method">未填静息心率。上表把 %HRR 系数按典型静息心率（无习惯约 70、训练者约 55 bpm）换算成 %HRmax，系数本身为经验估计，无单一文献出处。补测晨脉后改为 Karvonen，结果才对应你自己的静息心率。</p>
     `;
   }
 
@@ -101,7 +98,7 @@ function ltBlock(hrMax: number, resting: number | null): string {
         ${row("LT2", untrained.lt2Karvonen.low, untrained.lt2Karvonen.high, trained.lt2Karvonen.low, trained.lt2Karvonen.high)}
       </tbody>
     </table>
-    <p class="result-method">LT1 / LT2 系数为经验估计，无单一文献出处。无习惯者取较低系数；训练者 LT2 取 85–88% HRR。对照 %HRmax：LT1 ${hrMaxLt1}，无习惯 LT2 ${untrainedLt2HrMax}，有习惯 LT2 ${trainedLt2HrMax}。</p>
+    <p class="result-method">LT1 / LT2 系数为经验估计，无单一文献出处。LT1 两组都取 65–70% HRR；LT2 无习惯者 80–83% HRR，训练者 85–88% HRR。</p>
   `;
 }
 

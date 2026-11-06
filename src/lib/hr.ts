@@ -56,26 +56,38 @@ export function hrrToHrMaxFraction(hrrFraction: number, restToMaxRatio: number):
   return restToMaxRatio + hrrFraction * (1 - restToMaxRatio);
 }
 
-/** RHR/HRmax used to align the %HRmax LT1 band with the %HRR one (60/180). */
-export const LT1_REFERENCE_REST_RATIO = 1 / 3;
+/**
+ * Typical RHR/HRmax per group (untrained ≈ 70/185, trained ≈ 55/185), used only to
+ * express the %HRR bands as %HRmax for users without a resting HR.
+ */
+export const REFERENCE_REST_RATIO = { untrained: 0.38, trained: 0.3 } as const;
+
+type Band = { low: number; high: number };
+
+function toHrMaxBand(hrr: Band, restRatio: number): Band {
+  const round = (x: number): number => Math.round(x * 100) / 100;
+  return {
+    low: round(hrrToHrMaxFraction(hrr.low, restRatio)),
+    high: round(hrrToHrMaxFraction(hrr.high, restRatio)),
+  };
+}
+
+function lactateBands(lt1Karvonen: Band, lt2Karvonen: Band, restRatio: number) {
+  return {
+    lt1Karvonen,
+    lt2Karvonen,
+    lt1HrMax: toHrMaxBand(lt1Karvonen, restRatio),
+    lt2HrMax: toHrMaxBand(lt2Karvonen, restRatio),
+  };
+}
 
 /**
- * Empirical estimates with no single primary source.
- * LT1 %HRmax ≈ hrrToHrMaxFraction(lt1Karvonen, LT1_REFERENCE_REST_RATIO), rounded to 75–80%.
+ * Empirical %HRR estimates with no single primary source. %HRR is primary because it
+ * tracks %VO₂R (Swain & Leutholtz 1997); the %HRmax bands are derived, never set by hand.
  */
 export const LT_COEFFICIENTS = {
-  untrained: {
-    lt1Karvonen: { low: 0.65, high: 0.7 },
-    lt2Karvonen: { low: 0.8, high: 0.83 },
-    lt1HrMax: { low: 0.75, high: 0.8 },
-    lt2HrMax: { low: 0.82, high: 0.85 },
-  },
-  trained: {
-    lt1Karvonen: { low: 0.65, high: 0.7 },
-    lt2Karvonen: { low: 0.85, high: 0.88 },
-    lt1HrMax: { low: 0.75, high: 0.8 },
-    lt2HrMax: { low: 0.88, high: 0.92 },
-  },
+  untrained: lactateBands({ low: 0.65, high: 0.7 }, { low: 0.8, high: 0.83 }, REFERENCE_REST_RATIO.untrained),
+  trained: lactateBands({ low: 0.65, high: 0.7 }, { low: 0.85, high: 0.88 }, REFERENCE_REST_RATIO.trained),
 } as const;
 
 /** Karvonen zones are only meaningful when RHR < HRmax. */

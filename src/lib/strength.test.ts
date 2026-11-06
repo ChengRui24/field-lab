@@ -21,6 +21,13 @@ describe("1RM formulas", () => {
 });
 
 describe("estimate1rm with RIR", () => {
+  it("ignoring RIR at 5 reps underestimates ~3% (1 RIR) and ~6–7% (2 RIR), as the page states", () => {
+    const under = (f: (w: number, r: number) => number, rir: number) => 1 - f(100, 5) / f(100, 5 + rir);
+    expect(under(epley1rm, 1)).toBeCloseTo(0.028, 2);
+    expect(under(brzycki1rm, 1)).toBeCloseTo(0.031, 2);
+    expect(under(epley1rm, 2)).toBeCloseTo(0.054, 2);
+    expect(under(brzycki1rm, 2)).toBeCloseTo(0.063, 2);
+  });
   it("100 kg × 5 @ 2 RIR → effective 7 reps, Epley 123.33", () => {
     const r = estimate1rm({ weight: 100, reps: 5, rir: 2 });
     expect(r.ok).toBe(true);

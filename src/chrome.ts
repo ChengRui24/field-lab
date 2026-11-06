@@ -52,7 +52,6 @@ function initResultsJump(): void {
   if (!(results instanceof HTMLElement)) return;
   const empty = results.querySelector(".result-empty");
   if (!(empty instanceof HTMLElement)) return;
-  if (!("IntersectionObserver" in window)) return;
 
   const button = document.createElement("button");
   button.type = "button";
@@ -62,18 +61,26 @@ function initResultsJump(): void {
   document.body.appendChild(button);
 
   const singleColumn = window.matchMedia(SINGLE_COLUMN);
-  let resultsBelow = false;
+  // Read the position on every scroll: an IntersectionObserver never fires when a fast
+  // fling or anchor jump skips from "below" to "above" without the panel intersecting.
   const update = (): void => {
+    const resultsBelow = results.getBoundingClientRect().top >= window.innerHeight;
     button.hidden = !(singleColumn.matches && resultsBelow && empty.hidden);
   };
+  let frame = 0;
+  const scheduleUpdate = (): void => {
+    if (frame) return;
+    frame = requestAnimationFrame(() => {
+      frame = 0;
+      update();
+    });
+  };
 
-  new IntersectionObserver(([entry]) => {
-    if (!entry) return;
-    resultsBelow = !entry.isIntersecting && entry.boundingClientRect.top > 0;
-    update();
-  }).observe(results);
+  window.addEventListener("scroll", scheduleUpdate, { passive: true });
+  window.addEventListener("resize", scheduleUpdate);
   new MutationObserver(update).observe(empty, { attributes: true, attributeFilter: ["hidden"] });
   singleColumn.addEventListener("change", update);
+  update();
 
   button.addEventListener("click", () => {
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
