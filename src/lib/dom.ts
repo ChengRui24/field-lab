@@ -33,10 +33,15 @@ export function inputValue(id: string): string {
   return el.value;
 }
 
-/** Parsed number from an input, or null when empty, unparseable, or the browser reports badInput. */
+function outOfRange(el: HTMLInputElement): boolean {
+  const { badInput, rangeUnderflow, rangeOverflow } = el.validity;
+  return badInput || rangeUnderflow || rangeOverflow;
+}
+
+/** Parsed number from an input, or null when empty, unparseable, or outside the input's min/max. */
 export function readNumber(id: string): number | null {
   const el = document.getElementById(id);
-  if (el instanceof HTMLInputElement && el.validity.badInput) return null;
+  if (el instanceof HTMLInputElement && outOfRange(el)) return null;
   return parseNumber(inputValue(id));
 }
 
@@ -95,6 +100,7 @@ function savePersisted(target: EventTarget | null): void {
   const key = target.dataset.persist;
   if (!key) return;
   if (target instanceof HTMLInputElement && target.type === "radio" && !target.checked) return;
+  if (target instanceof HTMLInputElement && outOfRange(target)) return;
   writeStored(key, target.value);
 }
 
