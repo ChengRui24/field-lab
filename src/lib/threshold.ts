@@ -10,6 +10,7 @@ export function assertNever(value: never): never {
   throw new Error(`未处理的分支: ${String(value)}`);
 }
 
+/** Empirical rule of thumb (LT1 20–25% slower than LT2); no single primary source. */
 export function lt1PaceFromLt2(lt2SecPerKm: number): { fast: number; slow: number } {
   return {
     fast: lt2SecPerKm * 1.2,
@@ -37,9 +38,9 @@ export function raceToLt2Pace(distance: RaceDistance, raceSecPerKm: number): {
       };
     case "full":
       return {
-        faster: raceSecPerKm + 10,
-        slower: raceSecPerKm + 15,
-        note: "全马略慢于 LT2，配速加 10–15 秒/km",
+        faster: raceSecPerKm - 15,
+        slower: raceSecPerKm - 10,
+        note: "全马慢于 LT2，配速减 10–15 秒/km",
       };
     default:
       return assertNever(distance);

@@ -67,10 +67,10 @@
         </thead>
         <tbody>
           <tr>
-            <td class="recommend">30 分钟计时赛</td>
+            <td class="recommend">30 分钟计时赛（Friel）</td>
             <td>热身 10 分钟 → 全力匀速 30 分钟；取最后 20 分钟平均心率</td>
             <td>LT2（lactate threshold 2，第二乳酸阈）心率；全程平均配速 ≈ LT2 配速</td>
-            <td>能匀速把控 30 分钟全力者。最准的现场 LT2</td>
+            <td>能匀速把控 30 分钟全力者。常用的现场 LT2 估计</td>
           </tr>
           <tr>
             <td>比赛成绩反推</td>
@@ -81,7 +81,7 @@
           <tr>
             <td>由 LT2 推 LT1（lactate threshold 1，第一乳酸阈）</td>
             <td class="formula">LT1 配速 ≈ LT2 配速 × 1.20–1.25</td>
-            <td>LT1 配速（慢 20–25%）</td>
+            <td>LT1 配速（慢 20–25%）。经验估计，无单一文献出处</td>
             <td>已知 LT2 配速即可</td>
           </tr>
           <tr>
@@ -97,7 +97,7 @@
         <form class="panel stack" id="th-form" autocomplete="off">
           <div class="block">
             <h2>30 分钟计时赛</h2>
-            <p class="protocol">有手表时最准的现场 LT2。目标是匀速全力，不是前快后崩。跑或骑都可以，但测哪个模式，心率和配速就只用于那个模式。</p>
+            <p class="protocol">有手表时常用的现场 LT2 估计（Friel 法）。目标是匀速全力，不是前快后崩。跑或骑都可以，但测哪个模式，心率和配速就只用于那个模式。</p>
             <ol class="steps">
               <li>热身约 10 分钟，到微微出汗。</li>
               <li>接着尽全力、尽量匀速跑（或骑）30 分钟。配速按「还能再坚持 30 分钟」来定。不要把跑步阈值心率拿去当骑行区。</li>
@@ -105,11 +105,11 @@
             </ol>
             <div class="field">
               <label for="tt-hr">最后 20 分钟平均心率（bpm）</label>
-              <input id="tt-hr" type="number" min="90" max="220" step="1" placeholder="例如 168" />
+              <input id="tt-hr" type="number" inputmode="numeric" min="90" max="220" step="1" placeholder="例如 168" />
             </div>
             <div class="field">
               <label for="tt-pace">全程平均配速（min/km）</label>
-              <input id="tt-pace" type="text" data-time="pace" placeholder="5:00 或 500" />
+              <input id="tt-pace" type="text" inputmode="decimal" data-time="pace" placeholder="5:00 或 500" />
               <span class="hint">可写 5:00 或 5。</span>
             </div>
           </div>
@@ -129,23 +129,23 @@
               </select>
             </div>
             <div class="field">
-              <label for="race-time">完赛成绩</label>
-              <input id="race-time" type="text" data-time="duration" placeholder="1:36:00、45:00 或 4500" />
+              <label for="race-time">完赛成绩（时:分:秒）</label>
+              <input id="race-time" type="text" inputmode="decimal" data-time="duration" placeholder="1:36:00、45:00 或 4500" />
             </div>
             <div class="field">
               <label for="race-hr">比赛平均心率（bpm，可选）</label>
-              <input id="race-hr" type="number" min="90" max="220" step="1" />
+              <input id="race-hr" type="number" inputmode="numeric" min="90" max="220" step="1" />
             </div>
           </div>
           <div class="block">
             <h2>已知 LT2 配速</h2>
             <p class="protocol">已经从计时赛或比赛得到 LT2 配速时，用来推 LT1。</p>
             <ol class="steps">
-              <li>LT1 大约再慢 20–25%。例如 LT2 为 5:00/km 时，LT1 约 6:00–6:15/km。</li>
+              <li>LT1 大约再慢 20–25%（经验估计，无单一文献出处）。例如 LT2 为 5:00/km 时，LT1 约 6:00–6:15/km。</li>
             </ol>
             <div class="field">
               <label for="known-lt2">LT2 配速（min/km）</label>
-              <input id="known-lt2" type="text" data-time="pace" placeholder="5:00 或 500" />
+              <input id="known-lt2" type="text" inputmode="decimal" data-time="pace" placeholder="5:00 或 500" />
             </div>
           </div>
           <div class="block">
@@ -166,15 +166,15 @@
               </select>
             </div>
             <div class="field">
-              <label for="vdot-time">完赛成绩</label>
-              <input id="vdot-time" type="text" data-time="duration" placeholder="45:00、13600 或 1:36:00" />
+              <label for="vdot-time">完赛成绩（时:分:秒）</label>
+              <input id="vdot-time" type="text" inputmode="decimal" data-time="duration" placeholder="45:00、13600 或 1:36:00" />
             </div>
           </div>
         </form>
 
-        <div class="panel results" id="th-results">
+        <div class="panel results" id="th-results" aria-live="polite">
           <h2>结果</h2>
-          <p class="result-empty" id="th-empty">在左侧填入计时赛、比赛或 VDOT，这里给出阈值配速或训练配速。</p>
+          <p class="result-empty" id="th-empty">填入计时赛、比赛或 VDOT 后，这里给出阈值配速或训练配速。</p>
           <div id="th-output" hidden></div>
         </div>
       </div>
@@ -184,7 +184,7 @@
         <ol>
           <li>
             <span class="note-label">计时赛</span>
-            来源为 Conconi 等人的改良方案，广泛验证。前 10 分钟心率还在上升，所以只取后 20 分钟。这是有手表时最准确的现场 LT2。在跑步上测到的 LTHR 不能当骑行分区；游泳更要单独测。
+            方法来自 Joe Friel（《The Triathlete's Training Bible》）：30 分钟独自全力计时，最后 20 分钟平均心率作为 LTHR 估计。这是教练实践中的现场方法，不是实验室乳酸测定。前 10 分钟心率还在上升，所以只取后 20 分钟。在跑步上测到的 LTHR 不能当骑行分区；游泳更要单独测。
           </li>
           <li>
             <span class="note-label">新手</span>
@@ -192,11 +192,11 @@
           </li>
           <li>
             <span class="note-label">比赛距离</span>
-            优秀跑者半马约 98–100% LT2 配速，最接近阈值。10K 略高于 LT2；全马略低于 LT2。新手全马后半程掉速严重，全马配速推算会偏低，改用 10K 或半马。
+            优秀跑者半马约 98–100% LT2 配速，最接近阈值。10K 略快于 LT2；全马慢于 LT2，所以全马配速要减 10–15 秒/km 才得到 LT2。新手全马后半程掉速严重，全马配速推算会偏低，改用 10K 或半马。
           </li>
           <li>
             <span class="note-label">LT1</span>
-            配速约为 LT2 再慢 20–25%。例：LT2 为 5:00/km 时，LT1 约 6:00–6:15/km。心率侧的 LT1/LT2 见「心率与分区」。
+            配速约为 LT2 再慢 20–25%，属于经验估计，无单一文献出处。例：LT2 为 5:00/km 时，LT1 约 6:00–6:15/km。心率侧的 LT1/LT2 见「心率与分区」。
           </li>
           <li>
             <span class="note-label">训练者</span>
@@ -204,12 +204,12 @@
           </li>
           <li>
             <span class="note-label">VDOT</span>
-            Daniels 用比赛时间反推「有效 VO₂max」，名称来自 V̇O₂ 的写法，不是某一串单词的缩写。里面已经包含跑步经济性，所以它预测配速往往比实验室 VO₂max 更准。得到的是配速表，不是心率区。表中 T 与 M 的百分比略有重叠，这是原表如此。
+            Daniels 用比赛时间反推「有效 VO₂max」，名称来自 V̇O₂ 的写法，不是某一串单词的缩写。里面已经包含跑步经济性，所以它预测配速往往比实验室 VO₂max 更准。得到的是配速表，不是心率区。本页 E / T / I 取 VDOT 的固定比例（约 63–73% / 88% / 97.5%），M 取该 VDOT 预测的全马比赛配速；与 Daniels 原书训练配速表的差距约 3 秒/km 以内，低 VDOT（约 40 以下）的 M 比原表略快。
           </li>
         </ol>
       </section>
     </main>
-    <footer class="site-footer">训练测算 · 非实验室诊断 · Conconi 改良 30 分钟计时赛 · Daniels VDOT</footer>
+    <footer class="site-footer">训练测算 · 非实验室诊断 · Friel 30 分钟计时赛 · Daniels VDOT</footer>
     <script type="module" src="/src/pages/threshold.ts"></script>
   </body>
 </html>

@@ -1,6 +1,6 @@
 import "../styles/base.css";
 import { initChrome } from "../chrome";
-import { bindForm, checkedRadio, inputValue } from "../lib/dom";
+import { bindForm, checkedRadio, checkedSex, inputValue } from "../lib/dom";
 import {
   formatVo2,
   parseDurationToMinutes,
@@ -8,12 +8,15 @@ import {
   parsePaceToSecPerKm,
 } from "../lib/format";
 import { cooperVo2, mile15Vo2, rockportVo2, stepTestVo2 } from "../lib/vo2";
-import { cyclingVo2, runningVo2Acsm, walkingVo2, wattsToKgmMin, ymcaVo2max } from "../lib/acsm";
-
-function parseSex(raw: string | null): "male" | "female" | null {
-  if (raw === "male" || raw === "female") return raw;
-  return null;
-}
+import {
+  acsmSpeedWarning,
+  cyclingVo2,
+  runningVo2Acsm,
+  walkingVo2,
+  wattsToKgmMin,
+  ymcaInputProblem,
+  ymcaVo2max,
+} from "../lib/acsm";
 
 function render(): void {
   const empty = document.getElementById("vo2-empty");
@@ -39,7 +42,7 @@ function render(): void {
     const vo2 = mile15Vo2(mileTime);
     parts.push(`
       <div class="block">
-      <p class="result-kicker">2.4 km 计时跑</p>
+      <p class="result-kicker">1.5 英里（2.41 km）计时跑</p>
       <p class="result-value">${formatVo2(vo2)}<small>mL/kg/min</small></p>
       <p class="result-method">VO₂max = 3.5 + 483 ÷ 时间(分钟)。时间 ${mileTime.toFixed(2)} min。</p>
       </div>
@@ -48,7 +51,7 @@ function render(): void {
 
   const rpKg = parseNumber(inputValue("rp-kg"));
   const rpAge = parseNumber(inputValue("rp-age"));
-  const rpSex = parseSex(checkedRadio("rp-sex"));
+  const rpSex = checkedSex("rp-sex");
   const rpTime = parseDurationToMinutes(inputValue("rp-time"));
   const rpHr = parseNumber(inputValue("rp-hr"));
   if (rpKg !== null && rpAge !== null && rpSex !== null && rpTime !== null && rpHr !== null) {
@@ -63,12 +66,12 @@ function render(): void {
       <div class="block">
       <p class="result-kicker">Rockport 步行</p>
       <p class="result-value">${formatVo2(vo2)}<small>mL/kg/min</small></p>
-      <p class="result-method">低体能现场公式。体重已按 ×2.205 换算为磅。适合无运动习惯或大 BMI。</p>
+      <p class="result-method">低体能现场公式（Kline 1987）。体重已按 ×2.205 换算为磅。适合无运动习惯或大 BMI。</p>
       </div>
     `);
   }
 
-  const stSex = parseSex(checkedRadio("st-sex"));
+  const stSex = checkedSex("st-sex");
   const stHr = parseNumber(inputValue("st-hr"));
   if (stSex !== null && stHr !== null) {
     const vo2 = stepTestVo2(stSex, stHr);
@@ -96,27 +99,29 @@ function render(): void {
     ymW2 !== null &&
     ymHr2 !== null
   ) {
-    const vo2 = ymcaVo2max({
+    const ymArgs = {
       age: ymAge,
       weightKg: ymKg,
       watts1: ymW1,
       hr1: ymHr1,
       watts2: ymW2,
       hr2: ymHr2,
-    });
-    if (vo2 !== null) {
+    };
+    const problem = ymcaInputProblem(ymArgs);
+    const vo2 = ymcaVo2max(ymArgs);
+    if (problem === null && vo2 !== null) {
       parts.push(`
       <div class="block">
-      <p class="result-kicker">YMCA 功率车外推</p>
+      <p class="result-kicker">YMCA 式（Tanaka 变体）功率车外推</p>
       <p class="result-value">${formatVo2(vo2)}<small>mL/kg/min</small></p>
-      <p class="result-method">两级 VO₂ 对心率连线，外推到 Tanaka HRmax。功已按 ×6.12 换成 kg·m/min。</p>
+      <p class="result-method">两级 VO₂ 对心率连线，外推到 Tanaka HRmax（原版 YMCA 外推到 220 − 年龄）。功已按 ×6.12 换成 kg·m/min。</p>
       </div>
     `);
     } else {
       parts.push(`
       <div class="block">
-      <p class="result-kicker">YMCA 功率车外推</p>
-      <p class="result-method">第二级心率必须高于第一级，才能做线性外推。</p>
+      <p class="result-kicker">YMCA 式（Tanaka 变体）功率车外推</p>
+      <p class="result-method range-note" role="alert">无法计算：${problem ?? "输入无效。"}</p>
       </div>
     `);
     }
@@ -130,11 +135,13 @@ function render(): void {
       const speed = 60000 / paceSec;
       const grade = gradePct / 100;
       const vo2 = metMode === "walk" ? walkingVo2(speed, grade) : runningVo2Acsm(speed, grade);
+      const speedWarning = acsmSpeedWarning(metMode, speed);
       parts.push(`
       <div class="block">
       <p class="result-kicker">ACSM ${metMode === "walk" ? "走" : "跑"}</p>
       <p class="result-value">${formatVo2(vo2)}<small>mL/kg/min</small></p>
       <p class="result-method">当前强度摄氧量，不是 VO₂max。S = ${speed.toFixed(0)} m/min，坡度 ${gradePct}%。</p>
+      ${speedWarning !== null ? `<p class="field-note range-note">${speedWarning}</p>` : ""}
       </div>
     `);
     }

@@ -76,7 +76,7 @@
             <td>Gulati</td>
             <td class="formula">HRmax = 206 - 0.88 × 年龄</td>
             <td>对女性通常更准</td>
-            <td>女性；本页选「女」后作为选用值</td>
+            <td>35 岁及以上女性（验证人群）；本页选「女」后作为选用值</td>
           </tr>
           <tr>
             <td>Fox（对照）</td>
@@ -103,29 +103,32 @@
               <li>能做现场全力冲的人，把手表峰值填进实测 HRmax，会覆盖公式。</li>
             </ol>
             <div class="field">
-              <label for="age">年龄</label>
-              <input id="age" name="age" type="number" min="10" max="90" step="1" placeholder="例如 40" />
+              <label for="age">年龄（岁）</label>
+              <input id="age" name="age" type="number" inputmode="numeric" min="10" max="90" step="1" placeholder="例如 40" data-persist="age" data-range-note="超出 Tanaka 公式的验证人群（18–81 岁健康成人），结果仅供参考" data-valid-min="18" data-valid-max="81" />
+              <p class="field-note range-note" id="age-range-note" hidden></p>
             </div>
             <div class="field">
-              <label>性别</label>
-              <div class="radios">
-                <label><input type="radio" name="sex" value="male" /> 男</label>
-                <label><input type="radio" name="sex" value="female" /> 女</label>
-              </div>
+              <fieldset class="radio-group">
+                <legend>性别</legend>
+                <div class="radios">
+                  <label><input type="radio" name="sex" value="male" data-persist="sex" /> 男</label>
+                  <label><input type="radio" name="sex" value="female" data-persist="sex" /> 女</label>
+                </div>
+              </fieldset>
               <span class="hint">用于在 Tanaka 与 Gulati 之间选用；不填则默认 Tanaka。</span>
             </div>
             <div class="field">
               <label for="rhr">静息心率 RHR（resting heart rate，bpm）</label>
-              <input id="rhr" name="rhr" type="number" min="30" max="120" step="1" placeholder="例如 60" />
+              <input id="rhr" name="rhr" type="number" inputmode="numeric" data-persist="rhr" min="30" max="120" step="1" placeholder="例如 60" />
             </div>
             <div class="field">
               <label for="measured">实测 HRmax（bpm，可选）</label>
-              <input id="measured" name="measured" type="number" min="100" max="230" step="1" placeholder="有手表峰值再填" />
+              <input id="measured" name="measured" type="number" inputmode="numeric" data-persist="hrmax" min="100" max="230" step="1" placeholder="有手表峰值再填" />
             </div>
           </div>
         </form>
 
-        <div class="panel results" id="hr-results">
+        <div class="panel results" id="hr-results" aria-live="polite">
           <h2>结果</h2>
           <p class="result-empty" id="hr-empty">填写年龄后，这里给出最大心率与分区。</p>
           <div id="hr-output" hidden></div>
@@ -158,11 +161,11 @@
           </li>
           <li>
             <span class="note-label">女性</span>
-            Gulati 对女性通常更准。本页在选择「女」且无实测时，以 Gulati 为选用 HRmax，Tanaka 仍列出对照。
+            Gulati 对女性通常更准，但只在 35 岁及以上女性中验证（Gulati 2010）；35 岁以下结果仅供参考。本页在选择「女」且无实测时，以 Gulati 为选用 HRmax，Tanaka 仍列出对照。
           </li>
           <li>
             <span class="note-label">LT 系数</span>
-            无运动习惯：LT1 ≈ 65% HRR，LT2 ≈ 80–83% HRR。有训练习惯：LT2 可到 85–88% HRR（精英甚至 92–94% HRmax）。同一「88% HRmax」对新手可能已经超阈。
+            以下系数是经验估计，无单一文献出处，只作起点，有计时赛或实验室数据时以实测为准。无运动习惯：LT1 ≈ 65% HRR，LT2 ≈ 80–83% HRR。有训练习惯：LT2 可到 85–88% HRR（精英甚至 92–94% HRmax）。同一「88% HRmax」对新手可能已经超阈。
           </li>
         </ol>
       </section>

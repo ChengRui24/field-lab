@@ -1,6 +1,6 @@
 import "../styles/base.css";
 import { initChrome } from "../chrome";
-import { bindForm, checkedRadio, inputValue } from "../lib/dom";
+import { bindForm, checkedSex, inputValue } from "../lib/dom";
 import {
   formatBpm,
   formatBpmRange,
@@ -9,19 +9,15 @@ import {
 import {
   foxHrMax,
   gulatiHrMax,
+  gulatiRangeNote,
   HRMAX_ZONES,
   KARVONEN_ZONES,
   karvonen,
   LT_COEFFICIENTS,
+  restingHrProblem,
   selectedHrMax,
   tanakaHrMax,
-  type Sex,
 } from "../lib/hr";
-
-function parseSex(raw: string | null): Sex | null {
-  if (raw === "male" || raw === "female") return raw;
-  return null;
-}
 
 function zoneRows(
   hrMax: number,
@@ -67,7 +63,7 @@ function ltBlock(hrMax: number, resting: number | null): string {
 
   if (resting === null) {
     return `
-      <p class="result-kicker">LT1 / LT2 心率 · %HRmax 对照</p>
+      <p class="result-kicker">LT1 / LT2 心率 · %HRmax 对照（经验估计）</p>
       <table class="result-table">
         <thead>
           <tr><th></th><th>无运动习惯</th><th>有训练习惯</th></tr>
@@ -77,7 +73,7 @@ function ltBlock(hrMax: number, resting: number | null): string {
           <tr><td>LT2</td><td class="mono">${untrainedLt2HrMax}</td><td class="mono">${trainedLt2HrMax}</td></tr>
         </tbody>
       </table>
-      <p class="result-method">未填静息心率，上表为 %HRmax。补测晨脉后改为 Karvonen，训练者务必如此。</p>
+      <p class="result-method">未填静息心率，上表为 %HRmax。LT1 / LT2 系数为经验估计，无单一文献出处。补测晨脉后改为 Karvonen，训练者务必如此。</p>
     `;
   }
 
@@ -95,7 +91,7 @@ function ltBlock(hrMax: number, resting: number | null): string {
   </tr>`;
 
   return `
-    <p class="result-kicker">LT1 / LT2 心率 · Karvonen</p>
+    <p class="result-kicker">LT1 / LT2 心率 · Karvonen（经验估计）</p>
     <table class="result-table">
       <thead>
         <tr><th></th><th>无运动习惯</th><th>有训练习惯</th></tr>
@@ -105,7 +101,7 @@ function ltBlock(hrMax: number, resting: number | null): string {
         ${row("LT2", untrained.lt2Karvonen.low, untrained.lt2Karvonen.high, trained.lt2Karvonen.low, trained.lt2Karvonen.high)}
       </tbody>
     </table>
-    <p class="result-method">无习惯者取较低系数；训练者 LT2 取 85–88% HRR。对照 %HRmax：LT1 ${hrMaxLt1}，无习惯 LT2 ${untrainedLt2HrMax}，有习惯 LT2 ${trainedLt2HrMax}。</p>
+    <p class="result-method">LT1 / LT2 系数为经验估计，无单一文献出处。无习惯者取较低系数；训练者 LT2 取 85–88% HRR。对照 %HRmax：LT1 ${hrMaxLt1}，无习惯 LT2 ${untrainedLt2HrMax}，有习惯 LT2 ${trainedLt2HrMax}。</p>
   `;
 }
 
@@ -118,7 +114,7 @@ function render(): void {
   const age = parseNumber(inputValue("age"));
   const rhr = parseNumber(inputValue("rhr"));
   const measured = parseNumber(inputValue("measured"));
-  const sex = parseSex(checkedRadio("sex"));
+  const sex = checkedSex("sex");
 
   if (age === null && measured === null) {
     empty.hidden = false;
@@ -139,6 +135,8 @@ function render(): void {
   const chosen = selectedHrMax({ age, sex, measured });
   if (!chosen) return;
 
+  const rhrProblem = rhr !== null ? restingHrProblem(chosen.value, rhr) : null;
+  const gulatiNote = gulatiRangeNote(sex, age);
   const chosenMethod = chosen.method;
   const mark = (method: string) => (method === chosenMethod ? ' class="used"' : "");
 
@@ -146,10 +144,10 @@ function render(): void {
     <p class="result-kicker">最大心率</p>
     <p class="result-value">${formatBpm(chosen.value)}<small>bpm</small></p>
     <p class="result-method">选用 <strong>${chosen.method}</strong>${
-      rhr !== null ? ` · HRR ${formatBpm(chosen.value - rhr)} bpm` : ""
+      rhr !== null && rhrProblem === null ? ` · HRR ${formatBpm(chosen.value - rhr)} bpm` : ""
     }</p>
     <table class="result-table">
-      <thead><tr><th>方法</th><th>HRmax</th><th></th></tr></thead>
+      <thead><tr><th>方法</th><th>HRmax</th><th>说明</th></tr></thead>
       <tbody>
         ${tanaka !== null ? `<tr${mark("Tanaka")}><td>Tanaka</td><td class="mono">${formatBpm(tanaka)}</td><td>普通人群推荐</td></tr>` : ""}
         ${
@@ -167,7 +165,14 @@ function render(): void {
         }
       </tbody>
     </table>
+    ${gulatiNote !== null ? `<p class="field-note range-note">${gulatiNote}</p>` : ""}
   `;
+
+  if (rhrProblem !== null) {
+    output.innerHTML = hrMaxTable;
+    detail.innerHTML = `<p class="result-method range-note" role="alert">${rhrProblem}</p>`;
+    return;
+  }
 
   const zones = zoneRows(chosen.value, rhr);
   const karvonenTable =

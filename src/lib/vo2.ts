@@ -4,6 +4,7 @@ export function cooperVo2(distanceMeters: number): number {
   return (distanceMeters - 504.9) / 44.73;
 }
 
+/** 1.5-mile (2414 m) run test; time in minutes. */
 export function mile15Vo2(timeMinutes: number): number {
   return 3.5 + 483 / timeMinutes;
 }
@@ -57,6 +58,7 @@ export function vdotFromRace(distanceMeters: number, timeMinutes: number): numbe
   return runningVo2(speed) / sustainFraction(timeMinutes);
 }
 
+/** Inverse of runningVo2: speed in m/min. */
 export function speedFromVo2(vo2: number): number {
   const a = 0.000104;
   const b = 0.182258;
@@ -65,14 +67,52 @@ export function speedFromVo2(vo2: number): number {
   return (-b + Math.sqrt(disc)) / (2 * a);
 }
 
-export const VDOT_PACE_ZONES = [
-  { id: "E", name: "E Easy / 轻松", low: 0.59, high: 0.74, meaning: "有氧基础" },
-  { id: "M", name: "M Marathon / 马拉松配速", low: 0.75, high: 0.84, meaning: "全马比赛配速" },
-  { id: "T", name: "T Threshold / 阈值", low: 0.83, high: 0.88, meaning: "乳酸阈" },
-  { id: "I", name: "I Interval / 间歇", low: 0.95, high: 1, meaning: "最大摄氧量" },
-] as const;
-
+/** Pace (sec/km) at a fraction of VDOT on the running VO₂ cost curve. */
 export function paceAtVdotPercent(vdot: number, percent: number): number {
   const speed = speedFromVo2(vdot * percent);
-  return 1000 / speed;
+  return 60000 / speed;
+}
+
+/** Race time (minutes) that the Daniels–Gilbert curves predict for this VDOT. */
+export function predictRaceMinutes(vdot: number, distanceMeters: number): number {
+  // vdotFromRace decreases monotonically with time, so bisect on time.
+  let fast = distanceMeters / 1000;
+  let slow = distanceMeters / 50;
+  for (let i = 0; i < 80; i += 1) {
+    const mid = (fast + slow) / 2;
+    if (vdotFromRace(distanceMeters, mid) > vdot) fast = mid;
+    else slow = mid;
+  }
+  return (fast + slow) / 2;
+}
+
+/**
+ * Fractions of VDOT fitted to Daniels' Running Formula training-pace table
+ * (VDOT 30–70, within ~3 s/km). M is not a fixed fraction: it is the predicted marathon pace.
+ */
+export const VDOT_FRACTIONS = {
+  easySlow: 0.632,
+  easyFast: 0.729,
+  threshold: 0.88,
+  interval: 0.975,
+} as const;
+
+export type VdotTrainingPaces = {
+  easy: { slow: number; fast: number };
+  marathon: number;
+  threshold: number;
+  interval: number;
+};
+
+/** Training paces in sec/km. */
+export function vdotTrainingPaces(vdot: number): VdotTrainingPaces {
+  return {
+    easy: {
+      slow: paceAtVdotPercent(vdot, VDOT_FRACTIONS.easySlow),
+      fast: paceAtVdotPercent(vdot, VDOT_FRACTIONS.easyFast),
+    },
+    marathon: (predictRaceMinutes(vdot, 42195) * 60 * 1000) / 42195,
+    threshold: paceAtVdotPercent(vdot, VDOT_FRACTIONS.threshold),
+    interval: paceAtVdotPercent(vdot, VDOT_FRACTIONS.interval),
+  };
 }

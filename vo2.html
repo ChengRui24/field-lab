@@ -73,9 +73,9 @@
             <td>完全久坐、中断或走路；体重过大导致经济性差、公式低估</td>
           </tr>
           <tr>
-            <td>2.4 km 计时跑</td>
+            <td>1.5 英里（2.41 km）计时跑</td>
             <td class="formula">VO₂max = 3.5 + 483 / 时间(分钟)</td>
-            <td>有跑步基础的计时跑（原 1.5 英里）</td>
+            <td>有跑步基础者，跑完 1.5 英里（2414 m）</td>
             <td>同上，跑不下来不要硬测</td>
           </tr>
           <tr>
@@ -91,10 +91,10 @@
             <td>精度约 ±10%，不能当训练标尺</td>
           </tr>
           <tr>
-            <td>YMCA 功率车</td>
+            <td>YMCA 式功率车（Tanaka 变体）</td>
             <td>热身后骑两档由轻到重的稳定功率，记下每档心率</td>
             <td>不能跑步、有功率车者</td>
-            <td>必须亚极量；第二档心率要明显高于第一档</td>
+            <td>必须亚极量；两档心率都要在 110–150 bpm，第二档高于第一档。原版 YMCA 外推到 220 − 年龄，本页改用 Tanaka</td>
           </tr>
           <tr>
             <td>ACSM（American College of Sports Medicine）代谢式</td>
@@ -118,20 +118,20 @@
             </ol>
             <div class="field">
               <label for="cooper-m">12 分钟距离（米）</label>
-              <input id="cooper-m" type="number" min="800" max="5000" step="1" placeholder="例如 2800" />
+              <input id="cooper-m" type="number" inputmode="decimal" min="800" max="5000" step="1" placeholder="例如 2800" />
             </div>
           </div>
           <div class="block">
-            <h2>2.4 km 计时跑</h2>
-            <p class="protocol">原测试是 1.5 英里，约 2.4 km。用最短时间跑完这段距离。</p>
+            <h2>1.5 英里（2.41 km）计时跑</h2>
+            <p class="protocol">公式对应 1.5 英里（2414 m）测试，不能换成其他距离。用最短时间跑完这段距离。</p>
             <ol class="steps">
-              <li>热身 5–10 分钟。在跑道或标定路线上跑 2.4 km。</li>
+              <li>热身 5–10 分钟。在跑道或标定路线上跑 2.41 km（400 m 跑道约 6 圈加 14 m）。</li>
               <li>全力但匀速：一开始不要冲刺，按你能坚持完全程的最快配速。</li>
               <li>记下完跑时间。跑不下来同样不要硬测。</li>
             </ol>
             <div class="field">
-              <label for="mile-time">完成时间</label>
-              <input id="mile-time" type="text" data-time="duration" placeholder="12:00、1200 或 12" />
+              <label for="mile-time">完成时间（分:秒）</label>
+              <input id="mile-time" type="text" inputmode="decimal" data-time="duration" placeholder="12:00、1200 或 12" />
             </div>
           </div>
           <div class="block">
@@ -144,26 +144,29 @@
             </ol>
             <div class="field">
               <label for="rp-kg">体重（kg）</label>
-              <input id="rp-kg" type="number" min="30" max="200" step="0.1" />
+              <input id="rp-kg" type="number" inputmode="decimal" data-persist="weight" min="30" max="200" step="0.1" />
             </div>
             <div class="field">
-              <label for="rp-age">年龄</label>
-              <input id="rp-age" type="number" min="10" max="90" step="1" />
+              <label for="rp-age">年龄（岁）</label>
+              <input id="rp-age" type="number" inputmode="numeric" min="10" max="90" step="1" data-persist="age" data-range-note="超出 Rockport 公式的验证人群（30–69 岁，Kline 1987），结果仅供参考" data-valid-min="30" data-valid-max="69" />
+              <p class="field-note range-note" id="rp-age-range-note" hidden></p>
             </div>
             <div class="field">
-              <label>性别</label>
-              <div class="radios">
-                <label><input type="radio" name="rp-sex" value="male" /> 男</label>
-                <label><input type="radio" name="rp-sex" value="female" /> 女</label>
-              </div>
+              <fieldset class="radio-group">
+                <legend>性别</legend>
+                <div class="radios">
+                  <label><input type="radio" name="rp-sex" value="male" data-persist="sex" /> 男</label>
+                  <label><input type="radio" name="rp-sex" value="female" data-persist="sex" /> 女</label>
+                </div>
+              </fieldset>
             </div>
             <div class="field">
-              <label for="rp-time">1.6 km 用时</label>
-              <input id="rp-time" type="text" data-time="duration" placeholder="15:30 或 1530" />
+              <label for="rp-time">1.6 km 用时（分:秒）</label>
+              <input id="rp-time" type="text" inputmode="decimal" data-time="duration" placeholder="15:30 或 1530" />
             </div>
             <div class="field">
               <label for="rp-hr">走完即刻心率（bpm）</label>
-              <input id="rp-hr" type="number" min="60" max="200" step="1" />
+              <input id="rp-hr" type="number" inputmode="numeric" min="60" max="200" step="1" />
             </div>
           </div>
           <div class="block">
@@ -175,49 +178,51 @@
               <li>3 分钟一到立刻停下站直。等 5 秒，再数 15 秒脉搏，结果 ×4 就是恢复心率。</li>
             </ol>
             <div class="field">
-              <label>性别</label>
-              <div class="radios">
-                <label><input type="radio" name="st-sex" value="male" /> 男</label>
-                <label><input type="radio" name="st-sex" value="female" /> 女</label>
-              </div>
+              <fieldset class="radio-group">
+                <legend>性别</legend>
+                <div class="radios">
+                  <label><input type="radio" name="st-sex" value="male" data-persist="sex" /> 男</label>
+                  <label><input type="radio" name="st-sex" value="female" data-persist="sex" /> 女</label>
+                </div>
+              </fieldset>
             </div>
             <div class="field">
               <label for="st-hr">恢复心率（bpm）</label>
-              <input id="st-hr" type="number" min="60" max="200" step="1" />
+              <input id="st-hr" type="number" inputmode="numeric" min="60" max="200" step="1" />
             </div>
           </div>
           <div class="block">
-            <h2>YMCA 功率车</h2>
+            <h2>YMCA 式功率车（Tanaka 变体）</h2>
             <p class="protocol">需要能显示瓦数的室内功率车或骑行台。这不是全力冲，是两档「还能说话」的稳定骑。</p>
             <ol class="steps">
               <li>热身 2–3 分钟，轻松蹬，心率先平下来。</li>
-              <li>第一档：选一个轻松但不是散步的功率（常见 50–100 W），匀速骑满约 3 分钟。最后 15–30 秒记下功率和平均心率，填成负荷 1、心率 1。</li>
-              <li>第二档：把功率提高一档（常见再加 25–50 W），再稳骑约 3 分钟。心率应明显高于第一档，但仍能说短句，不要骑到力竭。记下负荷 2、心率 2。</li>
-              <li>页面用这两点连线，外推到 Tanaka 最大心率，估 VO₂max。若第二档心率没有更高，无法计算。</li>
+              <li>第一档：选一个轻松但不是散步的功率（常见 50–100 W），匀速骑满约 3 分钟。最后 15–30 秒记下功率和平均心率，填成负荷 1、心率 1。心率要在 110–150 bpm 之间，低于 110 就加功率。</li>
+              <li>第二档：把功率提高一档（常见再加 25–50 W），再稳骑约 3 分钟。心率应明显高于第一档，且不超过 150 bpm，仍能说短句，不要骑到力竭。记下负荷 2、心率 2。</li>
+              <li>页面用这两点连线，外推到 Tanaka 最大心率，估 VO₂max（原版 YMCA 外推到 220 − 年龄，40 岁时两者相同，年龄越大 Tanaka 值越高）。若负荷或心率没有升高，或心率不在 110–150 bpm，结果区会说明原因。</li>
             </ol>
             <div class="field">
-              <label for="ym-age">年龄</label>
-              <input id="ym-age" type="number" min="10" max="90" step="1" />
+              <label for="ym-age">年龄（岁）</label>
+              <input id="ym-age" type="number" inputmode="numeric" min="10" max="90" step="1" data-persist="age" />
             </div>
             <div class="field">
               <label for="ym-kg">体重（kg）</label>
-              <input id="ym-kg" type="number" min="30" max="200" step="0.1" />
+              <input id="ym-kg" type="number" inputmode="decimal" data-persist="weight" min="30" max="200" step="0.1" />
             </div>
             <div class="field">
               <label for="ym-w1">负荷 1（W）</label>
-              <input id="ym-w1" type="number" min="25" max="400" step="1" />
+              <input id="ym-w1" type="number" inputmode="numeric" min="25" max="400" step="1" />
             </div>
             <div class="field">
               <label for="ym-hr1">心率 1（bpm）</label>
-              <input id="ym-hr1" type="number" min="80" max="180" step="1" />
+              <input id="ym-hr1" type="number" inputmode="numeric" min="80" max="180" step="1" />
             </div>
             <div class="field">
               <label for="ym-w2">负荷 2（W）</label>
-              <input id="ym-w2" type="number" min="25" max="400" step="1" />
+              <input id="ym-w2" type="number" inputmode="numeric" min="25" max="400" step="1" />
             </div>
             <div class="field">
               <label for="ym-hr2">心率 2（bpm）</label>
-              <input id="ym-hr2" type="number" min="80" max="200" step="1" />
+              <input id="ym-hr2" type="number" inputmode="numeric" min="80" max="200" step="1" />
             </div>
           </div>
           <div class="block">
@@ -228,35 +233,37 @@
               <li>骑：填当时功率（W）和体重。选对「走 / 跑 / 骑」。</li>
             </ol>
             <div class="field">
-              <label>方式</label>
-              <div class="radios">
-                <label><input type="radio" name="met-mode" value="walk" /> 走</label>
-                <label><input type="radio" name="met-mode" value="run" /> 跑</label>
-                <label><input type="radio" name="met-mode" value="bike" /> 骑</label>
-              </div>
+              <fieldset class="radio-group">
+                <legend>方式</legend>
+                <div class="radios">
+                  <label><input type="radio" name="met-mode" value="walk" /> 走</label>
+                  <label><input type="radio" name="met-mode" value="run" /> 跑</label>
+                  <label><input type="radio" name="met-mode" value="bike" /> 骑</label>
+                </div>
+              </fieldset>
             </div>
             <div class="field">
               <label for="met-pace">配速（min/km，走/跑）</label>
-              <input id="met-pace" type="text" data-time="pace" placeholder="5:30 或 530" />
+              <input id="met-pace" type="text" inputmode="decimal" data-time="pace" placeholder="5:30 或 530" />
             </div>
             <div class="field">
               <label for="met-grade">坡度（%，走/跑）</label>
-              <input id="met-grade" type="number" min="0" max="20" step="0.5" placeholder="0" />
+              <input id="met-grade" type="number" inputmode="decimal" min="0" max="20" step="0.5" placeholder="0" />
             </div>
             <div class="field">
               <label for="met-watts">功率（W，骑）</label>
-              <input id="met-watts" type="number" min="40" max="600" step="1" />
+              <input id="met-watts" type="number" inputmode="numeric" min="40" max="600" step="1" />
             </div>
             <div class="field">
               <label for="met-kg">体重（kg，骑）</label>
-              <input id="met-kg" type="number" min="30" max="200" step="0.1" />
+              <input id="met-kg" type="number" inputmode="decimal" data-persist="weight" min="30" max="200" step="0.1" />
             </div>
           </div>
         </form>
 
-        <div class="panel results" id="vo2-results">
+        <div class="panel results" id="vo2-results" aria-live="polite">
           <h2>结果</h2>
-          <p class="result-empty" id="vo2-empty">在左侧完成任一项测试，这里给出 VO₂max 或当前强度摄氧量。</p>
+          <p class="result-empty" id="vo2-empty">完成任一项测试后，这里给出 VO₂max 或当前强度摄氧量。</p>
           <div id="vo2-output" hidden></div>
         </div>
       </div>
@@ -270,7 +277,7 @@
           </li>
           <li>
             <span class="note-label">久坐 / 大 BMI</span>
-            不要做 Cooper 或 2.4 km 计时跑。可能中断、走路，或因跑步经济性差被公式低估。改用 Rockport：不需要跑，尽快走完 1.6 km 即可。
+            不要做 Cooper 或 1.5 英里（2.41 km）计时跑。可能中断、走路，或因跑步经济性差被公式低估。改用 Rockport：不需要跑，尽快走完 1.6 km 即可。
           </li>
           <li>
             <span class="note-label">训练者</span>
@@ -281,8 +288,8 @@
             台阶高度是 41.3 cm，男女踏频不同（24 / 22 次/分），不要混用。精度大约 ±10%，只做粗略参考。
           </li>
           <li>
-            <span class="note-label">YMCA / ACSM</span>
-            功率车 VO₂（mL/kg/min）= 1.8 × 功（kg·m/min）/ 体重 + 7。走：0.1S + 1.8SG + 3.5；跑：0.2S + 0.9SG + 3.5。S 为 m/min，G 为坡度小数。
+            <span class="note-label">YMCA 式 / ACSM</span>
+            功率车 VO₂（mL/kg/min）= 1.8 × 功（kg·m/min）/ 体重 + 7。走：0.1S + 1.8SG + 3.5；跑：0.2S + 0.9SG + 3.5。S 为 m/min，G 为坡度小数。步行式只在 50–100 m/min 验证，跑步式需 ≥ 80 m/min（真正慢跑），超出时结果会提示。YMCA 式原版外推到 220 − 年龄，本页用 Tanaka。
           </li>
           <li>
             <span class="note-label">比赛配速</span>
