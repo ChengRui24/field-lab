@@ -17,13 +17,13 @@
     <title>临界功率 CP 与临界速度 · Field Lab</title>
     <meta
       name="description"
-      content="骑行临界功率 CP、FTP、跑步临界速度 CS、游泳 CSS。三者不能互换。FTP 是常用近似，不是实验室临界功率。"
+      content="骑行临界功率 CP、FTP、跑步临界速度 CS、游泳 CSS，并用 W′ 平衡（Skiba 2012）设计骑行间歇。三者不能互换。FTP 是常用近似，不是实验室临界功率。"
     />
     <link rel="canonical" href="https://chengrui24.github.io/field-lab/critical.html" />
     <meta property="og:title" content="临界功率 CP 与临界速度 · Field Lab" />
     <meta
       property="og:description"
-      content="骑行临界功率 CP、FTP、跑步临界速度 CS、游泳 CSS。三者不能互换。FTP 是常用近似，不是实验室临界功率。"
+      content="骑行临界功率 CP、FTP、跑步临界速度 CS、游泳 CSS，并用 W′ 平衡（Skiba 2012）设计骑行间歇。三者不能互换。FTP 是常用近似，不是实验室临界功率。"
     />
     <meta property="og:url" content="https://chengrui24.github.io/field-lab/critical.html" />
     <meta property="og:type" content="website" />
@@ -78,6 +78,12 @@
             <td>Allen / Coggan 操作定义，不是 CP</td>
           </tr>
           <tr>
+            <td>W′ 平衡（W′bal）</td>
+            <td>Skiba 积分模型：高于 CP 消耗 W′，低于 CP 按 τ = 546·e<sup>−0.01·DCP</sup> + 316 s 指数恢复，DCP = CP − 歇时功率</td>
+            <td>间歇中每组做完 / 歇完剩多少 W′，第几组耗尽</td>
+            <td>Skiba 2012。τ 是 7 名骑手的组均值，个体恢复快慢不同。只用于骑行</td>
+          </tr>
+          <tr>
             <td>临界速度 CS（critical speed）</td>
             <td>两次不同距离全力，v = CS + D′ / t</td>
             <td>跑步速度域边界；D′（D prime）为可动用距离</td>
@@ -124,6 +130,40 @@
             <div class="field">
               <label for="cp-p3">测试 3 平均功率（W，可选）</label>
               <input id="cp-p3" type="number" inputmode="numeric" min="50" max="2000" step="1" />
+            </div>
+          </div>
+          <div class="block">
+            <h2>间歇设计 · W′ 平衡</h2>
+            <p class="protocol">只适用于骑行。填一组间歇的功率和做 / 歇时长，看 W′ 能撑几组。</p>
+            <div class="field">
+              <label for="wb-cp">CP（W）</label>
+              <input id="wb-cp" type="number" inputmode="numeric" min="50" max="2000" step="1" data-persist="cp" placeholder="上方测试自动填入" />
+            </div>
+            <div class="field">
+              <label for="wb-wprime">W′（kJ）</label>
+              <input id="wb-wprime" type="number" inputmode="decimal" min="1" max="100" step="0.1" data-persist="wprime" placeholder="上方测试自动填入" data-range-note="W′ 通常在约 5–40 kJ，请核对单位是 kJ" data-valid-min="3" data-valid-max="60" />
+              <p class="field-note range-note" id="wb-wprime-range-note" hidden></p>
+            </div>
+            <p class="field-note" id="wb-source-note" hidden></p>
+            <div class="field">
+              <label for="wb-power">间歇功率（W）</label>
+              <input id="wb-power" type="number" inputmode="numeric" min="50" max="2000" step="1" />
+            </div>
+            <div class="field">
+              <label for="wb-work">每组做（分:秒）</label>
+              <input id="wb-work" type="text" inputmode="decimal" data-time="duration" placeholder="1:00" />
+            </div>
+            <div class="field">
+              <label for="wb-rest">每组歇（分:秒）</label>
+              <input id="wb-rest" type="text" inputmode="decimal" data-time="duration" placeholder="0:30" />
+            </div>
+            <div class="field">
+              <label for="wb-rest-power">歇时功率（W，可选）</label>
+              <input id="wb-rest-power" type="number" inputmode="numeric" min="0" max="2000" step="1" placeholder="留空按 CP 的一半" />
+            </div>
+            <div class="field">
+              <label for="wb-reps">计划组数（可选）</label>
+              <input id="wb-reps" type="number" inputmode="numeric" min="1" max="60" step="1" placeholder="留空则算能做几组" />
             </div>
           </div>
           <div class="block">
@@ -204,10 +244,14 @@
             <span class="note-label">测试质量</span>
             各次测试应充分恢复、真正全力。时间最好落在约 2–15 分钟。两次间隔太近或都未全力，拟合会偏。
           </li>
+          <li>
+            <span class="note-label">W′ 平衡</span>
+            恢复时间常数 τ 来自 Skiba 等 2012 年 7 名骑手做 60 秒做 / 30 秒歇间歇的组均值，个体恢复快慢不同，例如训练有素的骑手常恢复得更快（Bartram 等 2018，IJSPP）。结果是排课参考，不是保证；CP、W′ 不准时偏差会放大。只适用于骑行，不能套到跑步或游泳。
+          </li>
         </ol>
       </section>
     </main>
-    <footer class="site-footer">训练测算 · 非实验室诊断 · Jones / Vanhatalo CP · Wakayoshi CSS</footer>
+    <footer class="site-footer">训练测算 · 非实验室诊断 · Jones / Vanhatalo CP · Skiba W′bal · Wakayoshi CSS</footer>
     <script type="module" src="/src/pages/critical.ts"></script>
   </body>
 </html>
