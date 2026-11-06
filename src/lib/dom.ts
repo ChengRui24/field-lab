@@ -1,4 +1,10 @@
-import { canonicalizeTimeInput, rewriteTimePunctuation, type TimeInputKind } from "./format";
+import {
+  canonicalizeTimeInput,
+  interpretTimeInput,
+  parseNumber,
+  rewriteTimeCharacters,
+  type TimeInputKind,
+} from "./format";
 
 function timeKind(el: EventTarget | null): TimeInputKind | null {
   if (!(el instanceof HTMLInputElement)) return null;
@@ -7,8 +13,9 @@ function timeKind(el: EventTarget | null): TimeInputKind | null {
   return null;
 }
 
+// Unit forms (4分30秒) are only rewritten on commit; doing it per keystroke would mangle "4分" mid-entry.
 function applyTimePunctuation(input: HTMLInputElement): void {
-  const next = rewriteTimePunctuation(input.value);
+  const next = rewriteTimeCharacters(input.value);
   if (next === input.value) return;
   const start = input.selectionStart;
   const end = input.selectionEnd;
@@ -24,6 +31,13 @@ export function inputValue(id: string): string {
     return "";
   }
   return el.value;
+}
+
+/** Parsed number from an input, or null when empty, unparseable, or the browser reports badInput. */
+export function readNumber(id: string): number | null {
+  const el = document.getElementById(id);
+  if (el instanceof HTMLInputElement && el.validity.badInput) return null;
+  return parseNumber(inputValue(id));
 }
 
 export function checkedRadio(name: string): string | null {
@@ -107,12 +121,67 @@ function updateRangeNotes(form: HTMLFormElement): void {
   }
 }
 
+function setInvalid(field: HTMLInputElement, invalid: boolean): void {
+  if (invalid) field.setAttribute("aria-invalid", "true");
+  else field.removeAttribute("aria-invalid");
+}
+
+function updateNumberValidity(form: HTMLFormElement): void {
+  for (const field of form.querySelectorAll<HTMLInputElement>('input[type="number"]')) {
+    const { badInput, rangeUnderflow, rangeOverflow } = field.validity;
+    setInvalid(field, badInput || rangeUnderflow || rangeOverflow);
+  }
+}
+
+const TIME_HELP: Record<TimeInputKind, string> = {
+  pace: "无法识别：请写 4:30、431 或 4.5（不超过 30:00/km）",
+  duration: "无法识别：请写 45:00、1:36:00 或 4500（不超过 24 小时）",
+};
+
+function timeEcho(input: HTMLInputElement): HTMLElement {
+  const next = input.nextElementSibling;
+  if (next instanceof HTMLElement && next.classList.contains("time-echo")) return next;
+  const echo = document.createElement("p");
+  echo.className = "time-echo";
+  echo.setAttribute("aria-live", "polite");
+  echo.hidden = true;
+  if (input.id) {
+    echo.id = `${input.id}-time-echo`;
+    const describedBy = input.getAttribute("aria-describedby");
+    const ids = describedBy ? describedBy.split(/\s+/) : [];
+    if (!ids.includes(echo.id)) input.setAttribute("aria-describedby", [...ids, echo.id].join(" "));
+  }
+  input.insertAdjacentElement("afterend", echo);
+  return echo;
+}
+
+function updateTimeEchoes(form: HTMLFormElement): void {
+  for (const input of form.querySelectorAll<HTMLInputElement>("input[data-time]")) {
+    const kind = timeKind(input);
+    if (!kind) continue;
+    const echo = timeEcho(input);
+    const result = interpretTimeInput(input.value, kind);
+    let text = "";
+    if (result.status === "invalid") text = TIME_HELP[kind];
+    else if (result.status === "valid" && result.canonical !== input.value.trim()) {
+      text = `已理解为 ${result.canonical}`;
+    }
+    setInvalid(input, result.status === "invalid");
+    if (result.status === "invalid") echo.dataset.state = "invalid";
+    else delete echo.dataset.state;
+    echo.textContent = text;
+    echo.hidden = text === "";
+  }
+}
+
 export function bindForm(id: string, render: () => void): void {
   const form = document.getElementById(id);
   if (!(form instanceof HTMLFormElement)) return;
   restorePersisted(form);
   const renderAll = (): void => {
     updateRangeNotes(form);
+    updateNumberValidity(form);
+    updateTimeEchoes(form);
     render();
   };
   const commitTimeField = (event: Event): boolean => {
@@ -137,7 +206,10 @@ export function bindForm(id: string, render: () => void): void {
     renderAll();
   });
   form.addEventListener("focusout", (event) => {
-    if (commitTimeField(event)) renderAll();
+    if (commitTimeField(event)) {
+      savePersisted(event.target);
+      renderAll();
+    }
   });
   renderAll();
 }
